@@ -157,7 +157,6 @@ void drawPoints(Mat &I,IntPoint *pointArray,Grid *g,IntGrid maxProb, int mult){
         for(j=0;j<g->numRows;++j){
             idx=g->pointIndex[j*g->numCols+i];
             if(idx>=0){
-                //Scalar color(255,255,255);
                 float p=255*maxProb.data[i+j*g->numCols]/1024.0;
                 Scalar color(0,p,255-p);
                 circle(I,Point(pointArray[idx].x/mult,pointArray[idx].y/mult),3,color,-1);
@@ -234,15 +233,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
         IntGrid maxProb;
         ProbabilityGrid p=calculateProbabilities(g,&maxProb,0.14,10);
         drawPoints(I,gridArray,&g,maxProb,subdivision);
-//        probabilityGridFree(p);
-//        intGridFree(&maxProb);
-//        p=calculateProbabilities(g,&maxProb,0.1,10);
-//        probabilityGridFree(p);
-//        intGridFree(&maxProb);
-//        p=calculateProbabilities(g,&maxProb,0.2,10);
-//        probabilityGridFree(p);
-//        intGridFree(&maxProb);
-//        p=calculateProbabilities(g,&maxProb,0.05,10);
+
 
         if(g.numCols>8 &&g.numRows>8){
             ProbabilityGrid eightByEight=probabilityGridConstrainToBest(p,maxProb,8);
@@ -273,121 +264,4 @@ bool Camera::segment(Mat &I, double thresholdValue){
     imgSegListFree(&segList);
     return ans;
 }
-/*
-bool Camera::segment(Mat &I, double thresholdValue){
-    bool ans=this->getChannel(I,1);
-    CV_Assert(I.depth() != sizeof(uchar));
-    intList equivalences=intListCreate();
-    imgSegList segments=imgSegListCreate();
-    //DynList equivalences=dynListCreate(sizeof(Equivalence));
 
-
-
-    int channels = I.channels();
-    int nRows = I.rows;
-    int nCols = I.cols * channels;
-
-    int i,j;
-    int n=0;
-    uchar* p;
-    p=I.ptr<uchar>(0);
-
-    //init oldline
-    short * oldline=(short *)calloc(nCols,sizeof(short));
-    short * newline=(short *)calloc(nCols,sizeof(short));
-    short * tmpline =NULL;
-    //Test allocation
-
-    for (j=0;j<nCols;++j){
-        oldline[j]=NOSEGMENT;
-    }
-
-    for( i = 0; i < nRows; ++i)
-    {
-        p = I.ptr<uchar>(i);
-
-        if(p[0]<thresholdValue){
-            short up=oldline[0];
-            if(up!=NOSEGMENT){
-                newline[0]=up;
-                imgSegmentAddPixel(segments.list+up,0,i);
-
-                //holder.list[up].addPixel(0,i);
-            }
-            else
-            {
-                ImgSegment tmp=imgSegmentCreate(0,i,1);
-                imgSegListPush(&segments,tmp);
-                //addImgSegment(&holder,ImgSegment(0,i));
-                newline[0]=n;
-                intListPush(&equivalences,n++);
-            }
-        }
-        else
-            newline[0]=NOSEGMENT;
-
-
-
-
-
-        for ( j = 1; j < nCols; ++j)
-        {
-            if(p[j]<thresholdValue){
-                short last=newline[j-1];
-                short up=oldline[j];
-                if(up!=NOSEGMENT){
-                    newline[j]=up;
-                    imgSegmentAddPixel(segments.list+up,j,i);
-                    if(last!=NOSEGMENT && last!=up){
-                        int greater=last>up?last:up;
-                        int smaller=last<up?last:up;
-                        if (equivalences.list[greater]>smaller)
-                            equivalences.list[greater]=smaller;
-                        //Equivalence tmp;
-                        //Equivalence tmp={last,up};
-                        //intListPush(&equivalences,&tmp);
-                    }
-                }
-                else if(last!=NOSEGMENT){
-                    newline[j]=last;
-                    imgSegmentAddPixel(segments.list+last,j,i);
-
-                    //holder.list[last].addPixel(j,i);
-                }
-                else{
-                    newline[j]=n;
-                    intListPush(&equivalences,n++);
-                    //ImgSegment tmp=imgSegmentCreate(j,i,1);
-                    imgSegListPush(&segments,imgSegmentCreate(j,i,1));
-
-                    //addImgSegment(&holder,ImgSegment(j,i));
-                }
-            }
-            else
-                newline[j]=NOSEGMENT;
-        }
-        tmpline=oldline;
-        oldline=newline;
-        newline=tmpline;
-        tmpline=0;
-    }
-    free(oldline);
-    free(newline);
-
-    //Resolve Equivalences
-    imgSegList completeSegments=imgSegListCreate();
-    for(i=equivalences.numElements-1;i>=0;i--){
-        j=equivalences.list[i];
-        if(i!=j)
-            imgSegmentAdd(segments.list+j,segments.list[i]);
-        else if(segments.list[i].n>10){
-            imgSegListPush(&completeSegments,segments.list[i]);
-        }
-    }
-    imgSegListFree(&segments);
-    intListFree(&equivalences);
-    drawPoints(I,completeSegments);
-    imgSegListFree(&completeSegments);
-    return ans;
-}
-*/
