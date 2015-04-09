@@ -275,79 +275,7 @@ ProbabilityGrid calculateProbabilities(Grid grid,IntGrid *maxProb,float offset,i
     }
     return ans;
 }
-ProbabilityGrid calculateProbabilities2(Grid grid,float offset,int power){ //untested
-    int i,j,dx,dy,sq;
-    ProbabilityGrid ans;
-    IntPoint baseVector;
-    int length=(1<<power)*(offset); //to be changed
-    int c=length*length;
-    for(j=0;j<4;++j){
-        baseVector.x=((j&2)?-length:length)*(!(j&1));
-        baseVector.y=((j&2)?-length:length)*(j&1);
-        ans.prob[j]=intGridCreate(grid.numCols,grid.numRows);
-        for(i=0;i<grid.numCols*grid.numRows;++i){
-            if(grid.pointIndex[i]>=0){
-                dx=grid.offset[i].x-baseVector.x;
-                dy=grid.offset[i].y-baseVector.y;
-                sq=(dx*dx+dy*dy)/c;
-                ans.prob[j].data[i]=(1<<power)*exp(-sq);//find a replacement for this line..
-            }
-            else
-                ans.prob[j].data[i]=1<<(power-2);
-        }
-    }
-    //normalisation;
 
-    IntGrid sum=intGridCopy(ans.prob[0]);
-    for(i=1;i<4;i++)
-        intGridAddTo(sum, ans.prob[j]);
-    for(i=0;i<4;i++)
-        for(j=0;j<sum.numCols*sum.numRows;++j){
-            if(sum.data[i])
-                ans.prob[j].data[i]=(ans.prob[j].data[i]<<power)/sum.data[i];
-        }
-    return ans;
-}
-
-void calculateProbabilities1(Grid grid,float offset,int power){
-    int i,j,dx,dy,sq;
-    IntPoint baseVector[4];
-    int length=(1<<power)*(offset);
-    int c=length*length; //to be changed
-    float prob[4],sumprob;
-    for(j=0;j<4;++j){
-        baseVector[j].x=((j&2)?-length:length)*(!(j&1));
-        baseVector[j].y=((j&2)?-length:length)*(j&1);
-        grid.probabilities[j]=(int *)malloc(sizeof(int)*grid.numCols*grid.numRows);
-    }
-    grid.max_probablitiy=(int *)malloc(sizeof(int)*grid.numCols*grid.numRows);
-
-    for(i=0;i<grid.numCols*grid.numRows;++i){
-        if(grid.pointIndex[i]>=0){
-            sumprob=0;
-            for(j=0;j<4;++j){
-                dx=(grid.offset[i].x-baseVector[j].x);
-                dy=(grid.offset[i].y-baseVector[j].y);
-                sq=(dx*dx+dy*dy)/c;
-                prob[j]=exp(-sq);
-                sumprob+=prob[j];
-            }
-            grid.max_probablitiy=0;
-            for(j=0;j<4;++j){
-                grid.probabilities[j][i]=(int)(prob[j]/sumprob*(1<<power));
-                if(grid.probabilities[j][i]>grid.max_probablitiy[i])
-                    grid.max_probablitiy[i]=grid.probabilities[j][i];
-            }
-            dx=0;
-        }
-        else{
-            grid.max_probablitiy[i]=1<<(power-2);
-            for(j=0;j<4;++j){
-                grid.probabilities[j][i]=1<<(power-2);
-            }
-        }
-    }
-}
 
 ProbabilityGrid probabilityGridConstrainToBest(ProbabilityGrid other,IntGrid max,int number){
     assert(other.prob && other.prob[0].numCols>7 && other.prob[0].numRows>7);

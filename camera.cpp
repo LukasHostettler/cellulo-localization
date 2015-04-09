@@ -195,7 +195,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
     //drawLines(I,pointArray,neigh,segList.numElements,subdivision);
     //drawLines(I,pointArray,edges,numEdges,subdivision);
 
-    //setup next threshold
+    //!setup next threshold
 
     linkedKMeans(edges,means,numEdges);
 
@@ -214,10 +214,6 @@ bool Camera::segment(Mat &I, double thresholdValue){
 
     waitKey(10);
     if(correctMeanLength(pointArray,means,10,segList.numElements,&cross)){
-        //correctMeanLength(pointArray,means,10,segList.numElements);
-        //correctMeanLength(pointArray,means,10,segList.numElements);
-
-
         //copy pointArray to gridArray...
         IntPoint * gridArray = (IntPoint *)malloc(segList.numElements*sizeof(IntPoint));
         for(i=0;i<segList.numElements;i++){
