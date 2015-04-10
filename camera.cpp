@@ -92,6 +92,25 @@ void drawLines(Mat &I, IntPoint *pointArray, Edge *edges, int n, int mul,Scalar 
 
     }
 }
+void drawSquare(Mat &I, IntPoint *means, Grid * g, IntPoint upLeft,int sideLength,int mul){
+    --sideLength;
+//    sideLength*=-1;
+//    upLeft.x=8;
+//    upLeft.y=5;
+    Point p0((g->origin.x+(upLeft.x)*means[0].x+upLeft.y*means[1].x)/mul,(g->origin.y+upLeft.x*means[0].y+upLeft.y*means[1].y)/mul);
+    Point p1((g->origin.x+(upLeft.x+sideLength)*means[0].x+upLeft.y*means[1].x)/mul,(g->origin.y+(upLeft.x+sideLength)*means[0].y+upLeft.y*means[1].y)/mul);
+    Point p2((g->origin.x+(upLeft.x+sideLength)*means[0].x+(upLeft.y+sideLength)*means[1].x)/mul,(g->origin.y+(upLeft.x+sideLength)*means[0].y+(upLeft.y+sideLength)*means[1].y)/mul);
+    Point p3((g->origin.x+(upLeft.x)*means[0].x+(upLeft.y+sideLength)*means[1].x)/mul,(g->origin.y+(upLeft.x)*means[0].y+(upLeft.y+sideLength)*means[1].y)/mul);
+
+
+    Scalar color(255,0,255);
+    line(I,p0,p1,color,3);
+    line(I,p2,p1,color,3);
+    line(I,p2,p3,color,3);
+    line(I,p0,p3,color,3);
+}
+
+
 void drawLines(Mat &I, IntPoint *pointArray, Grid *grid, int mul, Scalar color=Scalar(0,0,0)){
     int i,j,idx;
 
@@ -223,18 +242,24 @@ bool Camera::segment(Mat &I, double thresholdValue){
         Grid g=makeGrid(gridArray,means,10,segList.numElements,cross);
         drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));
         drawLines(I, gridArray, &g,subdivision);
-
+        circle(I,Point(g.origin.x/subdivision,g.origin.y/subdivision),200,Scalar(125,0,255),5);
 
 
         IntGrid maxProb;
         ProbabilityGrid p=calculateProbabilities(g,&maxProb,0.14,10);
-        drawPoints(I,gridArray,&g,maxProb,subdivision);
+        //drawPoints(I,gridArray,&g,maxProb,subdivision);
 
 
         if(g.numCols>8 &&g.numRows>8){
-            ProbabilityGrid eightByEight=probabilityGridConstrainToBest(p,maxProb,8);
-            IntGrid xMatrix=intGridMax(eightByEight.prob[0],eightByEight.prob[1]);
-            IntGrid yMatrix=intGridMax(eightByEight.prob[1],eightByEight.prob[2]);
+            IntPoint upLeft;
+            ProbabilityGrid eightByEight=probabilityGridConstrainToBest(p,maxProb,8,&upLeft);
+            drawSquare(I,means,&g,upLeft,8,subdivision);
+            drawPoints(I,gridArray,&g,maxProb,subdivision);
+
+            IntGrid xMatrix=intGridAdd(eightByEight.prob[0],eightByEight.prob[1]);
+            IntGrid yMatrix=intGridAdd(eightByEight.prob[1],eightByEight.prob[2]);
+            //mark the origin of the grid
+            circle(I,Point(upLeft.x,upLeft.y),3,Scalar(125,0,255),-1);
             int a=forwardProbability(xMatrix);
             int b=forwardProbability(yMatrix);
             intGridFree(&xMatrix);

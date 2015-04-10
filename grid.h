@@ -48,7 +48,7 @@ typedef struct _ProbabilityGrid{
 //ProbabilityGrid makeProbabilityGrid(IntPoint * pointArray,IntPoint *means,int power,int n);
 ProbabilityGrid getBestNxN(ProbabilityGrid g,int n);
 ProbabilityGrid calculateProbabilities(Grid grid,IntGrid *maxProb,float offset,int power);
-ProbabilityGrid probabilityGridConstrainToBest(ProbabilityGrid other,IntGrid max,int number);
+ProbabilityGrid probabilityGridConstrainToBest(ProbabilityGrid other,IntGrid max,int number, IntPoint *upLeft);
 void probabilityGridFree(ProbabilityGrid p);
 
 

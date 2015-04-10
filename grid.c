@@ -277,22 +277,19 @@ ProbabilityGrid calculateProbabilities(Grid grid,IntGrid *maxProb,float offset,i
 }
 
 
-ProbabilityGrid probabilityGridConstrainToBest(ProbabilityGrid other,IntGrid max,int number){
+ProbabilityGrid probabilityGridConstrainToBest(ProbabilityGrid other,IntGrid max,int number, IntPoint *upLeft){
     assert(other.prob && other.prob[0].numCols>7 && other.prob[0].numRows>7);
     ProbabilityGrid ans;
     int i;
     int nRow=other.prob[0].numRows;
     int nCol=other.prob[0].numCols;
-    //findmax
-    //IntGrid max1=intGridMax(other.prob[0],other.prob[1]);
-    //IntGrid max2=intGridMax(other.prob[2],other.prob[3]);
-    //IntGrid max=intGridMax(max1,max2);
+
     intGridFindBestNxN(max,&nCol,&nRow,number);
     for(i=0;i<4;++i)
         ans.prob[i]=intGridCopySub(other.prob[i],nRow,nCol,number,number);
-    //intGridFree(&max);
-    //intGridFree(&max1);
-    //intGridFree(&max2);
+
+    upLeft->y=nRow;
+    upLeft->x=nCol;
     return ans;
 
 }
@@ -562,6 +559,9 @@ Grid makeGrid(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint or
         pointOrig->x+=(a*medianOffset.x+b*medianOffset.y)>>power;
         pointOrig->y+=(c*medianOffset.x+d*medianOffset.y)>>power;
     }
+    ans.origin=origin;
+    intPointAdd(&(ans.origin),a*minGridX +b* minGridY,c*minGridX+d*minGridY);
+    intPointAdd(&(ans.origin),(a*medianOffset.x+b*medianOffset.y)>>power,(c*medianOffset.x+d*medianOffset.y)>>power);
     free(tmp1.list);
     free(tmp2.list);
     //    //Debug test offset length

@@ -38,10 +38,12 @@ int forwardProbability(IntGrid g){
     for(i=0;i<g.numCols;++i){
         lookup=0;
         for(j=0;j<g.numRows;++j){
-            lookup|= (g.array[j][i]>512)<<j;
+            lookup|= (g.array[j][i]<512)<<j;
         }
         if(mainLookUp[lookup]>=0)
             ++votes;
+        //reverse 8-bit lookup
+        lookup = ((lookup * 0x0802LU & 0x22110LU) | (lookup * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
         if(mainLookUp[(~lookup)&0xFF]>=0)
             --votes;
     }
