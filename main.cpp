@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
         if(waitKey(10)!=-1)
             break;
 
-    };
+    }
 
     return 0;
 }

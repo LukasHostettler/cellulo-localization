@@ -239,11 +239,17 @@ bool Camera::segment(Mat &I, double thresholdValue){
             gridArray[i]=pointArray[i];
         }
         circle(I,Point(cross.x/subdivision,cross.y/subdivision),7,Scalar(255,255,255),3);
+        DotInformation dotInfo=dotInfoInit(gridArray,means,10,segList.numElements,cross);
+        IntPoint *probs= probabilities(dotInfo.xoffsets, dotInfo.yoffsets,dotInfo.numElements);
+
+        dotInfoFree(&dotInfo);
         Grid g=makeGrid(gridArray,means,10,segList.numElements,cross);
         drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));
         drawLines(I, gridArray, &g,subdivision);
         circle(I,Point(g.origin.x/subdivision,g.origin.y/subdivision),200,Scalar(125,0,255),5);
 
+
+        //IntPoint * probs_test=probabilities(g.offset,segList.numElements);
 
         IntGrid maxProb;
         ProbabilityGrid p=calculateProbabilities(g,&maxProb,0.14,10);

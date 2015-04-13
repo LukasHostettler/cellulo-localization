@@ -175,8 +175,8 @@ int intGridMaximum(IntGrid g,int *idx){
 }
 void intGridIndToSub(int ind, int * numCol,int * numRow){
     //idx=numCols*row+col;
-    int col=ind %(*numCol);
-    int row=(ind-col)/(*numCol);
+    //int col=ind %(*numCol);
+    //int row=(ind-col)/(*numCol);
     if(numCol && numRow){
         *numRow=*numRow;
         *numRow=ind/(*numCol);
@@ -436,7 +436,7 @@ int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntP
     int colEst=indiceGrid.numCols/2;
 
     if(itterateSpiral(indiceGrid,&rowEst,&colEst)){
-       *origin=pointArray[indiceGrid.array[rowEst][colEst]];
+        *origin=pointArray[indiceGrid.array[rowEst][colEst]];
     }
 
     intGridFree(&indiceGrid);
@@ -444,6 +444,134 @@ int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntP
     free(gridCoordinate);
     return 1;
 }
+IntPoint medianCorrectOffsets(DotInformation d){
+    IntPoint median;
+    intList tmp,cpy;
+    int i;
+
+    tmp.numAlloc=d.numElements;
+    tmp.numElements=d.numElements;
+
+    tmp.list=d.xoffsets;
+    cpy=intListCopy(&tmp); //used in order to not destroy the order of the list
+    median.x=intListMedian(cpy);
+    intListFree(&cpy);
+
+    tmp.list=d.yoffsets;
+    cpy=intListCopy(&tmp);
+    median.y=intListMedian(cpy);
+    intListFree(&cpy);
+    for(i=0;i<d.numElements;++i){
+        d.xoffsets[i]-=median.x;
+        d.yoffsets[i]-=median.y;
+    }
+    return median;
+}
+
+
+DotInformation dotInfoCreateEmpty(){
+    DotInformation ans;
+    ans.numElements=0;
+    ans.gridMaxCols=0;
+    ans.gridMaxRows=0;
+    ans.xoffsets=0;
+    ans.yoffsets=0;
+    ans.gridCoordinate=0;
+    return ans;
+}
+void dotInfoFree(DotInformation *d){
+    if(d){
+        d->numElements=0;
+        d->gridMaxCols=0;
+        d->gridMaxRows=0;
+        if(d->xoffsets)
+            free(d->xoffsets);
+        if(d->yoffsets)
+            free(d->yoffsets);
+        if(d->gridCoordinate)
+            free(d->gridCoordinate);
+        d->xoffsets=0;
+        d->yoffsets=0;
+        d->gridCoordinate=0;
+    }
+
+}
+
+DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int numPoints,IntPoint origin){
+    DotInformation ans=dotInfoCreateEmpty();
+    int xoffset,yoffset,xproj,yproj,minGridX=INT_MAX,maxGridX=INT_MIN,minGridY=INT_MAX,maxGridY=INT_MIN;
+    IntPoint medianOffset;
+    //matrix [a b ;c d];
+    int a=means[0].x;
+    int b=means[1].x;
+    int c=means[0].y;
+    int d=means[1].y;
+    int determinant=a*d-c*b;
+    if(!determinant ||numPoints<1)
+        return ans;
+
+
+    ans.numElements=numPoints;
+    ans.xoffsets=(int *)malloc(sizeof(int)*numPoints);
+    ans.yoffsets=(int *)malloc(sizeof(int)*numPoints);
+    ans.gridCoordinate=(IntPoint *)malloc(sizeof(IntPoint)*numPoints);
+
+    IntPoint * pointOrig=pointArray; //pointer trough pointArray;
+    int * xoffsets=ans.xoffsets; // pointer through offsetArray
+    int * yoffsets=ans.yoffsets; // pointer through offsetArray
+    IntPoint * gridCoordinate=ans.gridCoordinate; //pointer trough gridCoordiates
+    while(pointOrig<pointArray+numPoints){
+        //project
+        xoffset=pointOrig->x-origin.x;
+        yoffset=pointOrig->y-origin.y;
+        xproj= ((long)(d*xoffset-b*yoffset)<<power)/determinant;
+        yproj= ((long)(-c*xoffset+a*yoffset)<<power)/determinant;
+
+        //assign coordinate
+        gridCoordinate->x=(xproj>>power)+((xproj>>(power-1))&1);
+        gridCoordinate->y=(yproj>>power)+((yproj>>(power-1))&1);
+
+        //update minMax
+        if(gridCoordinate->x<minGridX)
+            minGridX=gridCoordinate->x;
+        if(gridCoordinate->x>maxGridX)
+            maxGridX=gridCoordinate->x;
+        if(gridCoordinate->y<minGridY)
+            minGridY=gridCoordinate->y;
+        if(gridCoordinate->y>maxGridY)
+            maxGridY=gridCoordinate->y;
+
+        //Debug set point to grid coordinate.
+        pointOrig->x=a*gridCoordinate->x+b*gridCoordinate->y+origin.x;
+        pointOrig->y=c*gridCoordinate->x+d*gridCoordinate->y+origin.y;
+
+
+        //find offsets:
+        *xoffsets=xproj-(gridCoordinate->x<<power);
+        *yoffsets=yproj-(gridCoordinate->y<<power);
+
+        //Increment pointers;
+        ++pointOrig;
+        ++xoffsets;
+        ++yoffsets;
+        ++gridCoordinate;
+    }
+    ans.gridMaxCols=maxGridX-minGridX+1;
+    ans.gridMaxRows=maxGridY-minGridY+1;
+
+    medianOffset =medianCorrectOffsets(ans);
+
+    while(pointOrig!=pointArray){
+        pointOrig--;
+        pointOrig->x+=(a*medianOffset.x+b*medianOffset.y)>>power;
+        pointOrig->y+=(c*medianOffset.x+d*medianOffset.y)>>power;
+    }
+    ans.gridOrigin=origin;
+    intPointAdd(&(ans.gridOrigin),a*minGridX +b* minGridY,c*minGridX+d*minGridY);
+    intPointAdd(&(ans.gridOrigin),(a*medianOffset.x+b*medianOffset.y)>>power,(c*medianOffset.x+d*medianOffset.y)>>power);
+    return ans;
+}
+
 
 
 Grid makeGrid(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint origin){

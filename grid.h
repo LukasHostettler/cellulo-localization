@@ -56,7 +56,18 @@ void probabilityGridFree(ProbabilityGrid p);
 
 //reports success
 int correctMeanLength(IntPoint * pointArray, IntPoint *means, int power, int n, IntPoint *origin);
-
+typedef struct _DotInformation{
+    int numElements;
+    int gridMaxRows;
+    int gridMaxCols;
+    IntPoint gridOrigin;
+    int * xoffsets;
+    int * yoffsets;
+    IntPoint * gridCoordinate;
+    //Prob?
+}DotInformation;
+DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint origin);
+void dotInfoFree(DotInformation * d);
 Grid makeGrid(IntPoint * pointArray, IntPoint * means, int power, int n, IntPoint origin);
 void deleteGrid(Grid g);//frees all arrays
 //void calculateProbabilities(Grid grid,float offset,int power);

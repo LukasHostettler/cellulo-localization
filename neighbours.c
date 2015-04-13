@@ -215,6 +215,7 @@ int quickPartition(int * list, int left,int right,int pivotIndex){
     list[storeIndex]=tmp;
     return storeIndex;
 }
+//Attention! This function changes the order of the content of list
 int quickSelect(int * list, int left,int right,int n){
     if (left==right)
         return list[left];

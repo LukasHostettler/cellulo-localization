@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "decoder.h"
 
 static char mainNumberSequence[]={0,0,0,0,0,0,1,0,0,1,1,1,1,1,0,1,0,0,1,0,0,0,0,1,1,1,0,1,1,1,0,0,1,0,1,0,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,0,1,0,1,1,1,1,0,0,0,1,1};
@@ -7,29 +8,40 @@ static int diffNumberSequence2[]={};
 static int diffNumberSequence3[]={};
 static int diffNumberSequence4[]={};
 static int mainLookUp[]={-1,0,-1,1,-1,-1,-1,-1,2,-1,-1,-1,-1,19,-1,-1,-1,-1,3,-1,-1,37,-1,58,-1,-1,-1,-1,20,-1,-1,-1,16,-1,-1,-1,-1,-1,4,-1,-1,30,-1,-1,38,-1,-1,59,-1,-1,-1,-1,47,-1,-1,-1,-1,-1,21,-1,-1,7,-1,-1,-1,-1,17,-1,35,-1,-1,14,-1,-1,-1,-1,-1,-1,5,-1,33,-1,-1,31,-1,-1,-1,-1,-1,-1,39,-1,-1,51,-1,60,-1,-1,-1,-1,-1,44,-1,-1,-1,-1,48,41,-1,-1,-1,-1,-1,26,-1,-1,-1,-1,22,53,-1,-1,-1,-1,8,-1,-1,-1,62,-1,-1,-1,-1,-1,18,-1,-1,-1,36,57,-1,-1,-1,15,-1,-1,-1,-1,29,-1,-1,-1,-1,46,-1,-1,-1,-1,6,-1,-1,34,-1,13,-1,-1,-1,32,-1,-1,-1,-1,-1,-1,50,-1,-1,-1,43,-1,-1,40,-1,-1,25,-1,-1,52,-1,-1,-1,61,-1,-1,-1,-1,-1,56,-1,-1,-1,28,-1,-1,45,-1,-1,-1,-1,12,-1,-1,-1,-1,49,-1,42,-1,-1,24,-1,-1,-1,-1,-1,-1,55,-1,27,-1,-1,-1,11,-1,-1,-1,-1,23,-1,-1,54,-1,-1,10,-1,-1,-1,-1,-1,9,-1,-1,-1,-1,-1,-1};//256 long 2^8
+//static inline int abs(int x)
+//{
+//    return (x + (x >> 31)) ^ (x >> 31);
+//}
 
-#define MEAN_OFFSET 40 /* USUAL OFFSET*/
+#define MEAN_OFFSET 180 /* USUAL OFFSET*/
 #define PROB_MAX 1024L  /*Defines the Vertical Height at the peak  */
-#define POWERSHIFT 7 /* SHIFT USED TO AVOID FLOATS */
-#define FACTOR_B 3*MEAN_OFFSET*MEAN_OFFSET
+#define POWERSHIFT 21 /* SHIFT USED TO AVOID FLOATS */
+#define FACTOR_B 3L*MEAN_OFFSET*MEAN_OFFSET
 #define FACTOR_A (-(3*PROB_MAX<<POWERSHIFT)/(2*MEAN_OFFSET*FACTOR_B))
 #define HORIZONTAL_MAX_SQUARED FACTOR_B
 int prob1(int diagonalOffset){
     int ans = 0;
     if(diagonalOffset*diagonalOffset<HORIZONTAL_MAX_SQUARED){
-        ans=FACTOR_A*(diagonalOffset*diagonalOffset*diagonalOffset -FACTOR_B*diagonalOffset)>>POWERSHIFT;
+        ans=(FACTOR_A*(diagonalOffset*diagonalOffset*diagonalOffset -FACTOR_B*diagonalOffset))>>POWERSHIFT;
     }
     return ans;
 }
 
-IntPoint * probabilities(IntPoint * offsets,int n){
+
+IntPoint * probabilities(int * offsetsx,int *offsetsy,int n){
     int i;
-    IntPoint * ans=malloc(sizeof *offsets*n);
+    int dx=0,dy=0;//debuggers
+    IntPoint * ans=(IntPoint *)malloc(sizeof(IntPoint)*n);
     for(i=0;i<n;++i){
-        ans[i].x=prob1(offsets->x+offsets->y);
-        ans[i].y=prob1(offsets->x-offsets->y);
-        ++offsets;
+        dx+=abs(*offsetsx+ *offsetsy);
+        dy+=abs(*offsetsx- *offsetsy);
+        ans[i].x=prob1(*offsetsx+ *offsetsy);
+        ans[i].y=prob1(*offsetsx- *offsetsy);
+        ++offsetsx;
+        ++offsetsy;
     }
+    dx/=n;
+    dy/=n;
     return ans;
 }
 
@@ -50,13 +62,5 @@ int forwardProbability(IntGrid g){
     return (votes);
 }
 
-int fwdProb(IntGrid g){
-    int i, j,k;
-    for(i=0;i<g.numCols;++i){
 
-        for(j=0;j<g.numRows;++j){
-
-        }
-    }
-}
 

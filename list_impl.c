@@ -14,6 +14,18 @@ TYPED_NAME(List) TYPED_NAME(ListCreate)(){
     return ans;
 }
 
+TYPED_NAME(List) TYPED_NAME(ListCopy)(TYPED_NAME(List) * dyn){
+    TYPED_NAME(List) ans= TYPED_NAME(ListCreate)();
+    ans.list=(TYPE *)malloc(dyn->numElements*sizeof(TYPE));
+    if(ans.list){
+        ans.numAlloc=dyn->numElements;
+        for(;ans.numElements<dyn->numElements;++ans.numElements){
+            ans.list[ans.numElements]=dyn->list[ans.numElements];
+        }
+    }
+    return ans;
+}
+
 
 void TYPED_NAME(ListPush)(TYPED_NAME(List) * dyn, TYPE element){
     assert(dyn);

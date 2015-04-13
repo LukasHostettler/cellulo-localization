@@ -20,5 +20,7 @@ TYPE * TYPED_NAME(ListGetStart) ( TYPED_NAME(List) * dyn);
 TYPE * TYPED_NAME(ListGetEnd)( TYPED_NAME(List) * dyn);
 
 void TYPED_NAME(ListFree) ( TYPED_NAME(List) * dyn);
+
+TYPED_NAME(List) TYPED_NAME(ListCopy)(TYPED_NAME(List) * dyn);
 #endif
 #endif
