@@ -40,6 +40,7 @@ IntGrid intGridCreate(int numCol, int numRow){
 }
 
 
+
 IntGrid intGridCopy(IntGrid other){
     int i;
     IntGrid ans=intGridCreate(other.numCols,other.numRows);
@@ -220,6 +221,7 @@ void intGridTest(){
     IntGrid b=intGridCopy(a);
     b.array[1][0]=15;
     IntGrid c=intGridAdd(a,b);
+    IntGrid e=intGridCopySub(a,0,1,3,3);
     intGridApplyToEveryElement(c,&mulby2);
     IntGrid d=intGridLocalSum(c,2);
     int max, maxIdx,rowN=d.numRows,colN=d.numCols;
@@ -559,6 +561,11 @@ DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int 
     ans.gridMaxCols=maxGridX-minGridX+1;
     ans.gridMaxRows=maxGridY-minGridY+1;
 
+    //Shift coordinates to be positive.
+    for(gridCoordinate=ans.gridCoordinate;gridCoordinate<ans.gridCoordinate+ans.numElements;++gridCoordinate){
+        intPointAdd(gridCoordinate,-minGridX,-minGridY);
+    }
+
     medianOffset =medianCorrectOffsets(ans);
 
     while(pointOrig!=pointArray){
@@ -572,6 +579,33 @@ DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int 
     return ans;
 }
 
+void makeGrid2(DotInformation dotInfo){
+    IntPoint *probs= probabilities(dotInfo.xoffsets, dotInfo.yoffsets,dotInfo.numElements);
+    IntGrid xProb=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(xProb,0);
+    IntGrid yProb=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(yProb,0);
+    IntGrid maxProb=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(maxProb,0);
+
+    int probProduct, i;
+    for(i=0;i<dotInfo.numElements;++i){
+        probProduct =abs(probs[i].x*probs[i].y);
+        IntPoint coord=dotInfo.gridCoordinate[i];
+        if(probProduct>=maxProb.array[coord.y][coord.x]){
+            maxProb.array[coord.y][coord.x]=probProduct;
+            xProb.array[coord.y][coord.x]=probs[i].x;
+            yProb.array[coord.y][coord.x]=probs[i].y;
+        }
+
+    }
+    free(probs);
+    //temporary
+    intGridFree(&xProb);
+    intGridFree(&yProb);
+    return maxProb;
+
+}
 
 
 Grid makeGrid(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint origin){

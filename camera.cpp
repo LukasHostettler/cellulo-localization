@@ -240,8 +240,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
         }
         circle(I,Point(cross.x/subdivision,cross.y/subdivision),7,Scalar(255,255,255),3);
         DotInformation dotInfo=dotInfoInit(gridArray,means,10,segList.numElements,cross);
-        IntPoint *probs= probabilities(dotInfo.xoffsets, dotInfo.yoffsets,dotInfo.numElements);
-
+        makeGrid2(dotInfo);
         dotInfoFree(&dotInfo);
         Grid g=makeGrid(gridArray,means,10,segList.numElements,cross);
         drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));

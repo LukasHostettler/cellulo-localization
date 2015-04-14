@@ -68,6 +68,8 @@ typedef struct _DotInformation{
 }DotInformation;
 DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint origin);
 void dotInfoFree(DotInformation * d);
+
+void makeGrid2(DotInformation dotInfo);
 Grid makeGrid(IntPoint * pointArray, IntPoint * means, int power, int n, IntPoint origin);
 void deleteGrid(Grid g);//frees all arrays
 //void calculateProbabilities(Grid grid,float offset,int power);
