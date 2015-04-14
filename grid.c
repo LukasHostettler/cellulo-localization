@@ -188,7 +188,7 @@ void intGridIndToSub(int ind, int * numCol,int * numRow){
 void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n){
     int maxIdx;
     //handle too small base grids
-    assert(nCol&&nRow&& *nCol>=n && *nRow>=n);
+    assert(nCol&&nRow&& grid.numCols>=n && grid.numRows>=n);
     IntGrid tmp=intGridLocalSum(grid,n);
     (*nCol)=tmp.numCols;
     (*nRow)=tmp.numRows;
@@ -558,8 +558,8 @@ DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int 
         ++yoffsets;
         ++gridCoordinate;
     }
-    ans.gridMaxCols=maxGridX-minGridX+1;
-    ans.gridMaxRows=maxGridY-minGridY+1;
+    ans.gridMaxRows=maxGridX-minGridX+1;
+    ans.gridMaxCols=maxGridY-minGridY+1;
 
     //Shift coordinates to be positive.
     for(gridCoordinate=ans.gridCoordinate;gridCoordinate<ans.gridCoordinate+ans.numElements;++gridCoordinate){
@@ -579,35 +579,39 @@ DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int 
     return ans;
 }
 
-void makeGrid2(DotInformation dotInfo){
+ProbabilityGrids makeProbabilityGrids(DotInformation dotInfo){
+    ProbabilityGrids ans;
     IntPoint *probs= probabilities(dotInfo.xoffsets, dotInfo.yoffsets,dotInfo.numElements);
-    IntGrid xProb=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
-    intGridFill(xProb,0);
-    IntGrid yProb=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
-    intGridFill(yProb,0);
-    IntGrid maxProb=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
-    intGridFill(maxProb,0);
+    ans.prob1=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(ans.prob1,0);
+    ans.prob2=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(ans.prob2,0);
+    ans.maxProb=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(ans.maxProb,0);
 
     int probProduct, i;
     for(i=0;i<dotInfo.numElements;++i){
         probProduct =abs(probs[i].x*probs[i].y);
         IntPoint coord=dotInfo.gridCoordinate[i];
-        if(probProduct>=maxProb.array[coord.y][coord.x]){
-            maxProb.array[coord.y][coord.x]=probProduct;
-            xProb.array[coord.y][coord.x]=probs[i].x;
-            yProb.array[coord.y][coord.x]=probs[i].y;
+        if(probProduct>=ans.maxProb.array[coord.x][coord.y]){
+            ans.maxProb.array[coord.x][coord.y]=probProduct;
+            ans.prob1.array[coord.x][coord.y]=probs[i].x;
+            ans.prob2.array[coord.x][coord.y]=probs[i].y;
         }
 
     }
     free(probs);
     //temporary
-    intGridFree(&xProb);
-    intGridFree(&yProb);
-    return maxProb;
+
+    return ans;
 
 }
 
-
+void probabilityGridsFree(ProbabilityGrids * grid){
+    intGridFree(&(grid->maxProb));
+    intGridFree(&grid->prob1);
+    intGridFree(&grid->prob2);
+}
 Grid makeGrid(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint origin){
     //power determines the precicision left for position estimation.
     //handle the offset in an appropriate manner

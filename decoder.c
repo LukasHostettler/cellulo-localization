@@ -13,7 +13,7 @@ static int mainLookUp[]={-1,0,-1,1,-1,-1,-1,-1,2,-1,-1,-1,-1,19,-1,-1,-1,-1,3,-1
 //    return (x + (x >> 31)) ^ (x >> 31);
 //}
 
-#define MEAN_OFFSET 180 /* USUAL OFFSET*/
+#define MEAN_OFFSET 200 /* USUAL OFFSET*/
 #define PROB_MAX 1024L  /*Defines the Vertical Height at the peak  */
 #define POWERSHIFT 21 /* SHIFT USED TO AVOID FLOATS */
 #define FACTOR_B 3L*MEAN_OFFSET*MEAN_OFFSET
@@ -45,22 +45,47 @@ IntPoint * probabilities(int * offsetsx,int *offsetsy,int n){
     return ans;
 }
 
-int forwardProbability(IntGrid g){
-    int i,j,lookup,votes=0;
-    for(i=0;i<g.numCols;++i){
+int forwardProbability(IntGrid g,int startRow,int startCol){
+    int i,j,lookup,probability,votes=0;
+    for(i=startCol;i<startCol+8;++i){
         lookup=0;
-        for(j=0;j<g.numRows;++j){
-            lookup|= (g.array[j][i]<512)<<j;
+        probability=1024;
+        for(j=startRow;j<startRow+8;++j){
+            lookup|= (g.array[j][i]<0)<<(j-startRow);
+            probability*=g.array[j][i];
+            probability>>=10;
         }
+        probability=abs(probability);
         if(mainLookUp[lookup]>=0)
-            ++votes;
+            votes+=probability;
         //reverse 8-bit lookup
         lookup = ((lookup * 0x0802LU & 0x22110LU) | (lookup * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
         if(mainLookUp[(~lookup)&0xFF]>=0)
-            --votes;
+            votes-=probability;
     }
     return (votes);
 }
+int downwardProbability(IntGrid g,int startRow,int startCol){
+    int i,j,lookup,probability,votes=0;
+    for(i=startRow;i<startRow+8;++i){
+        lookup=0;
+        probability=1024;
+        for(j=startCol;j<startCol+8;++j){
+            lookup|= (g.array[i][j]<0)<<(j-startCol);
+            probability*=g.array[i][j];
+            probability>>=10;
+        }
+        probability=abs(probability);
+        if(mainLookUp[lookup]>=0)
+            votes+=probability;
+        //reverse 8-bit lookup
+        lookup = ((lookup * 0x0802LU & 0x22110LU) | (lookup * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
+        if(mainLookUp[(~lookup)&0xFF]>=0)
+            votes-=probability;
+    }
+    return (votes);
+}
+
 
 
 

@@ -7,7 +7,8 @@ extern "C"
 #endif
 
 #include "grid.h"
-int forwardProbability(IntGrid g);
+int forwardProbability(IntGrid g, int startRow, int startCol);
+int downwardProbability(IntGrid g,int startRow,int startCol);
 IntPoint * probabilities(int *offsetsx, int *offsetsy, int n);
 
 #ifdef __cplusplus

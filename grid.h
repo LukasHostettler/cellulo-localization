@@ -35,6 +35,7 @@ IntGrid intGridAdd(IntGrid a,IntGrid b);//!Adds Elementwise a+b. Raises Error wh
 IntGrid intGridMax(IntGrid a,IntGrid b);//!Find Elementwise maximum. Raises error when dimensions disagree.
 void intGridApplyToEveryElement(IntGrid g,int(*f)(int)); //!Generic Function to apply functions to every Element
 IntGrid intGridLocalSum(IntGrid g,int windowSize); //! makes a convolution with a square window of size windowsize.
+void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n);
 
 void intGridFree(IntGrid * g);//!Frees the memory of an Intgrid
 void intGridTest(); //! Test function to see wheter intGrid works.
@@ -69,7 +70,15 @@ typedef struct _DotInformation{
 DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint origin);
 void dotInfoFree(DotInformation * d);
 
-void makeGrid2(DotInformation dotInfo);
+typedef struct _ProbabilityGrids{
+    IntGrid maxProb;
+    IntGrid prob1;
+    IntGrid prob2;
+}ProbabilityGrids;
+
+ProbabilityGrids makeProbabilityGrids(DotInformation dotInfo);
+void probabilityGridsFree(ProbabilityGrids * grid);
+
 Grid makeGrid(IntPoint * pointArray, IntPoint * means, int power, int n, IntPoint origin);
 void deleteGrid(Grid g);//frees all arrays
 //void calculateProbabilities(Grid grid,float offset,int power);

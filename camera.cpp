@@ -111,54 +111,7 @@ void drawSquare(Mat &I, IntPoint *means, Grid * g, IntPoint upLeft,int sideLengt
 }
 
 
-void drawLines(Mat &I, IntPoint *pointArray, Grid *grid, int mul, Scalar color=Scalar(0,0,0)){
-    int i,j,idx;
 
-    for(i=0;i<grid->numRows;++i){
-        Point first,last;
-        bool foundFirst=false,foundLast=false;
-        for(j=0;j<grid->numCols;++j){
-            idx=grid->pointIndex[i+j*grid->numRows];
-            if(!foundFirst){
-                if(idx>=0){
-                    foundFirst=true;
-                    first= Point(pointArray[idx].x/mul,pointArray[idx].y/mul);
-                }
-            }
-            else{
-                if(idx>=0){
-                    foundLast=true;
-                    last=Point(pointArray[idx].x/mul,pointArray[idx].y/mul);
-                }
-            }
-        }
-        if(foundFirst&&foundLast)
-            line(I,first,last,color);
-    }
-
-    for(j=0;j<grid->numCols;++j){
-        Point first,last;
-        bool foundFirst=false,foundLast=false;
-        for(i=0;i<grid->numRows;++i){
-
-            idx=grid->pointIndex[i+j*grid->numRows];
-            if(!foundFirst){
-                if(idx>=0){
-                    foundFirst=true;
-                    first= Point(pointArray[idx].x/mul,pointArray[idx].y/mul);
-                }
-            }
-            else{
-                if(idx>=0){
-                    foundLast=true;
-                    last=Point(pointArray[idx].x/mul,pointArray[idx].y/mul);
-                }
-            }
-        }
-        if(foundFirst&&foundLast)
-            line(I,first,last,color);
-    }
-}
 
 void drawDirections(Mat &I,IntPoint *pointArray, int n,int mul,IntPoint direction,Scalar color=Scalar(0,0,0)){
     Point dir(direction.x/mul,direction.y/mul);
@@ -169,24 +122,36 @@ void drawDirections(Mat &I,IntPoint *pointArray, int n,int mul,IntPoint directio
 
     }
 }
-void drawPoints(Mat &I,IntPoint *pointArray,Grid *g,IntGrid maxProb, int mult){
-    int i,j,idx;
 
-    for(i=0;i<g->numCols;++i){
-        for(j=0;j<g->numRows;++j){
-            idx=g->pointIndex[j*g->numCols+i];
-            if(idx>=0){
-                float p=255*maxProb.data[i+j*g->numCols]/1024.0;
-                Scalar color(0,p,255-p);
-                circle(I,Point(pointArray[idx].x/mult,pointArray[idx].y/mult),3,color,-1);
-            }
+
+Point transformFromIdx(int col, int row,IntPoint *means, IntPoint origin,int subdivision){
+    int px=(origin.x+row*means[0].x+col*means[1].x )/subdivision;
+    int py=(origin.y+row*means[0].y+col*means[1].y )/subdivision;
+    return Point(px,py);
+}
+void printIntGrid(Mat &I,IntGrid g,IntPoint *means,IntPoint origin,int subdivision,int min=0,int max=1024*256){
+    int row, col;
+
+    for(row=0;row<g.numRows;++row){
+        for(col=0;col<g.numCols;++col){
+            Point center=transformFromIdx(col,row,means,origin,subdivision);
+            int colorVal=(255*g.array[row][col])/ (max-min);
+            circle(I,center,5,Scalar(0,colorVal,255-colorVal),-1);
         }
     }
-
 }
+void printSquare(Mat &I,int row, int col, IntPoint * means,IntPoint origin, int subdivision,Scalar color=Scalar(255,0,255)){
+    Point pt0=transformFromIdx(col,row,means,origin,subdivision);
+    Point pt1=transformFromIdx(col+8,row,means,origin,subdivision);
+    Point pt2=transformFromIdx(col+8,row+8,means,origin,subdivision);
+    Point pt3=transformFromIdx(col,row+8,means,origin,subdivision);
 
-
-
+    circle(I,pt0,10,color);
+    line(I,pt0,pt1,color);
+    line(I,pt1,pt2,color);
+    line(I,pt2,pt3,color);
+    line(I,pt3,pt0,color);
+}
 
 bool Camera::segment(Mat &I, double thresholdValue){
 
@@ -232,49 +197,33 @@ bool Camera::segment(Mat &I, double thresholdValue){
     //drawDirections(I,pointArray,segList.numElements,subdivision,means[1],255.0);
 
     waitKey(10);
-    if(correctMeanLength(pointArray,means,10,segList.numElements,&cross)){
+    if(correctMeanLength(pointArray,means,10,segList.numElements,&cross)&&segList.numElements>64){
         //copy pointArray to gridArray...
         IntPoint * gridArray = (IntPoint *)malloc(segList.numElements*sizeof(IntPoint));
         for(i=0;i<segList.numElements;i++){
             gridArray[i]=pointArray[i];
         }
-        circle(I,Point(cross.x/subdivision,cross.y/subdivision),7,Scalar(255,255,255),3);
+        //print initial middle circle
         DotInformation dotInfo=dotInfoInit(gridArray,means,10,segList.numElements,cross);
-        makeGrid2(dotInfo);
-        dotInfoFree(&dotInfo);
-        Grid g=makeGrid(gridArray,means,10,segList.numElements,cross);
-        drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));
-        drawLines(I, gridArray, &g,subdivision);
-        circle(I,Point(g.origin.x/subdivision,g.origin.y/subdivision),200,Scalar(125,0,255),5);
+        circle(I,Point(dotInfo.gridOrigin.x/subdivision,dotInfo.gridOrigin.y/subdivision),7,Scalar(255,255,255),3);
 
+        ProbabilityGrids probGrids=makeProbabilityGrids(dotInfo);
+        printIntGrid(I,probGrids.maxProb,means,dotInfo.gridOrigin,subdivision);
 
-        //IntPoint * probs_test=probabilities(g.offset,segList.numElements);
-
-        IntGrid maxProb;
-        ProbabilityGrid p=calculateProbabilities(g,&maxProb,0.14,10);
-        //drawPoints(I,gridArray,&g,maxProb,subdivision);
-
-
-        if(g.numCols>8 &&g.numRows>8){
-            IntPoint upLeft;
-            ProbabilityGrid eightByEight=probabilityGridConstrainToBest(p,maxProb,8,&upLeft);
-            drawSquare(I,means,&g,upLeft,8,subdivision);
-            drawPoints(I,gridArray,&g,maxProb,subdivision);
-
-            IntGrid xMatrix=intGridAdd(eightByEight.prob[0],eightByEight.prob[1]);
-            IntGrid yMatrix=intGridAdd(eightByEight.prob[1],eightByEight.prob[2]);
-            //mark the origin of the grid
-            circle(I,Point(upLeft.x,upLeft.y),3,Scalar(125,0,255),-1);
-            int a=forwardProbability(xMatrix);
-            int b=forwardProbability(yMatrix);
-            intGridFree(&xMatrix);
-            intGridFree(&yMatrix);
-            probabilityGridFree(eightByEight);
-            intGridFree(&maxProb);
+        if(probGrids.maxProb.numCols>=8&&probGrids.maxProb.numRows>=8){
+            int nCol=0,nRow=0;
+            intGridFindBestNxN(probGrids.maxProb,&nCol,&nRow,8);
+            printSquare(I,nRow,nCol,means,dotInfo.gridOrigin,subdivision);
+            //find orientation:
+            int a=forwardProbability(probGrids.prob2,nRow,nCol);
+            int b=downwardProbability(probGrids.prob1,nRow,nCol);
+            cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<"\n";
         }
-        else
-            cout<<"not good condition";
-        probabilityGridFree(p);
+        dotInfoFree(&dotInfo);
+        drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));
+
+
+        probabilityGridsFree(&probGrids);
 
 
         free(gridArray);
