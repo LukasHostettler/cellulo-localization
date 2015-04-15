@@ -8,17 +8,7 @@ extern "C"
 #include "list.h"
 #include "neighbours.h"
 
-#define NOPOINT (-1)
-typedef struct _Grid{
-    IntPoint origin;
-    int numRows,numCols;
-    IntPoint *offset; //!List of offsets in gridCoordinates (x,y are independant);
-    int * pointIndex; //!Indices correspoding to the indices in the point list
-    int * probabilities[4]; //!probability to be up right down or left
-    int * max_probablitiy; //!maximal detected probability
-}Grid;
-
-
+#define NOPOINT -1
 
 typedef struct _IntGrid{
     int numCols;
@@ -39,19 +29,6 @@ void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n);
 
 void intGridFree(IntGrid * g);//!Frees the memory of an Intgrid
 void intGridTest(); //! Test function to see wheter intGrid works.
-
-
-
-typedef struct _ProbabilityGrid{
-    IntGrid prob[4];
-}ProbabilityGrid;
-
-//ProbabilityGrid makeProbabilityGrid(IntPoint * pointArray,IntPoint *means,int power,int n);
-ProbabilityGrid getBestNxN(ProbabilityGrid g,int n);
-ProbabilityGrid calculateProbabilities(Grid grid,IntGrid *maxProb,float offset,int power);
-ProbabilityGrid probabilityGridConstrainToBest(ProbabilityGrid other,IntGrid max,int number, IntPoint *upLeft);
-void probabilityGridFree(ProbabilityGrid p);
-
 
 
 
@@ -78,10 +55,6 @@ typedef struct _ProbabilityGrids{
 
 ProbabilityGrids makeProbabilityGrids(DotInformation dotInfo);
 void probabilityGridsFree(ProbabilityGrids * grid);
-
-Grid makeGrid(IntPoint * pointArray, IntPoint * means, int power, int n, IntPoint origin);
-void deleteGrid(Grid g);//frees all arrays
-//void calculateProbabilities(Grid grid,float offset,int power);
 
 #ifdef __cplusplus
 }

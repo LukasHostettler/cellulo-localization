@@ -127,7 +127,7 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
         means[1]=tmpMeans;
 
         //rot->x*=-1;
-        int tmp=rot->x*-1;
+        //int tmp=rot->x*-1;
         rot->x=rot->y;
         rot->y=0;//tmp;
         rotated=1;
@@ -142,7 +142,7 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
         means[0]=tmpMeans;
 
 //        rot->y*=-1;
-        int tmp=rot->y*-1;
+        //int tmp=rot->y*-1;
         rot->y=rot->x;
         rot->x=0;
         rotated=1;

@@ -8,6 +8,7 @@ extern "C"
 #include <math.h>
 #include <assert.h>
 #include "grid.h"
+#include "decoder.h"
 
 
 typedef struct{
@@ -232,76 +233,9 @@ void intGridTest(){
     intGridFree(&b);
     intGridFree(&c);
     intGridFree(&d);
-}
-ProbabilityGrid calculateProbabilities(Grid grid,IntGrid *maxProb,float offset,int power){ //untested
-    //This function assumes a gaussian centered at offset, with with such that gauss(0)=0.25;
-    ProbabilityGrid ans;
-    offset=0.15;
-    int i,j,dx,dy,sq;
-    IntPoint baseVector[4];
-    int length=(1<<power)*(offset);
-    float c= 0.0002*1.38629/(offset*offset);
-    //c/=2<<(2*power);
-    //int c=length*length; //to be changed
-    float prob[4],sumprob;
-    for(j=0;j<4;++j){
-        baseVector[j].x=((j&2)?-length:length)*(!(j&1));
-        baseVector[j].y=((j&2)?-length:length)*(j&1);
-        ans.prob[j]=intGridCreate(grid.numCols,grid.numRows);
-    }
-    *maxProb=intGridCreate(grid.numCols,grid.numRows);
-
-    for(i=0;i<grid.numCols*grid.numRows;++i){
-        if(grid.pointIndex[i]>=0){
-            sumprob=0;
-            for(j=0;j<4;++j){
-                dx=(grid.offset[i].x-baseVector[j].x);
-                dy=(grid.offset[i].y-baseVector[j].y);
-                sq=(dx*dx+dy*dy);
-                prob[j]=exp(-sq*c);
-                sumprob+=prob[j];
-            }
-            maxProb->data[i]=0;
-            for(j=0;j<4;++j){
-                ans.prob[j].data[i]=(int)((prob[j]*(1<<power))/sumprob);
-                if(ans.prob[j].data[i]>maxProb->data[i])
-                    maxProb->data[i]=ans.prob[j].data[i];
-            }
-            dx=0;//instruction for breakpoint
-        }
-        else{
-            maxProb->data[i]=1<<(power-2);
-            for(j=0;j<4;++j){
-                ans.prob[j].data[i]=1<<(power-2);
-            }
-        }
-    }
-    return ans;
+    intGridFree(&e);
 }
 
-
-ProbabilityGrid probabilityGridConstrainToBest(ProbabilityGrid other,IntGrid max,int number, IntPoint *upLeft){
-    assert(other.prob && other.prob[0].numCols>7 && other.prob[0].numRows>7);
-    ProbabilityGrid ans;
-    int i;
-    int nRow=other.prob[0].numRows;
-    int nCol=other.prob[0].numCols;
-
-    intGridFindBestNxN(max,&nCol,&nRow,number);
-    for(i=0;i<4;++i)
-        ans.prob[i]=intGridCopySub(other.prob[i],nRow,nCol,number,number);
-
-    upLeft->y=nRow;
-    upLeft->x=nCol;
-    return ans;
-
-}
-void probabilityGridFree(ProbabilityGrid p){
-    int i;
-    for(i=0;i<4;i++){
-        intGridFree(p.prob+i);
-    }
-}
 
 int itterateSpiral(IntGrid g, int * x, int * y){
     int xdir=0;
@@ -330,7 +264,7 @@ int itterateSpiral(IntGrid g, int * x, int * y){
         counter++;
         *x+=xdir;
         *y+=ydir;
-        if(*x>g.numCols || *x<0 || *y<0 || *y>g.numRows)
+        if(*x>=g.numCols || *x<0 || *y<0 || *y>=g.numRows)
             return 0;
     }
     return 1;
@@ -613,138 +547,7 @@ void probabilityGridsFree(ProbabilityGrids * grid){
     intGridFree(&grid->prob1);
     intGridFree(&grid->prob2);
 }
-Grid makeGrid(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint origin){
-    //power determines the precicision left for position estimation.
-    //handle the offset in an appropriate manner
-    //handle undefined means..
-    Grid ans;
-    ans.numCols=0;
-    ans.numRows=0;
-    int i,xoffset,yoffset,minGridX=INT_MAX,maxGridX=INT_MIN,minGridY=INT_MAX,maxGridY=INT_MIN;
-    IntPoint meanOffset={0,0},medianOffset;
-    //matrix [a b ;c d];
-    int a=means[0].x;
-    int b=means[1].x;
-    int c=means[0].y;
-    int d=means[1].y;
-    int * xOffsetList=(int *)malloc(sizeof(int)*n);
-    int * yOffsetList=(int *)malloc(sizeof(int)*n);
-    IntPoint * pointOrig=pointArray+n;
-    IntPoint * offsets=(IntPoint *)malloc(sizeof(IntPoint)*n)+n;
-    IntPoint * gridCoordinate=(IntPoint *)malloc(sizeof(IntPoint)*n)+n;
-    int determinant=a*d-c*b;
-    if(!determinant ||n<1)
-        return ans;
-    intList tmp1,tmp2;
-    tmp1.numAlloc=n;
-    tmp1.numElements=n;
-    tmp1.list=xOffsetList;
-    tmp2.numAlloc=n;
-    tmp2.numElements=n;
-    tmp2.list=yOffsetList;
 
-    //find approximate middle in list
-    //IntPoint origin=pointArray[n>>1];
-
-    //Debug:
-    //origin.x=128*180;
-    //origin.y=128*120;
-
-    while(pointOrig!=pointArray){
-        --pointOrig;
-        --offsets;
-        --gridCoordinate;
-
-
-        //project
-        xoffset=pointOrig->x-origin.x;
-        yoffset=pointOrig->y-origin.y;
-        int xproj= ((long)(d*xoffset-b*yoffset)<<power)/determinant;
-        int yproj= ((long)(-c*xoffset+a*yoffset)<<power)/determinant;
-
-
-        //assign coordinate
-        gridCoordinate->x=(xproj>>power)+((xproj>>(power-1))&1);
-        if(gridCoordinate->x<minGridX)
-            minGridX=gridCoordinate->x;
-        if(gridCoordinate->x>maxGridX)
-            maxGridX=gridCoordinate->x;
-        gridCoordinate->y=(yproj>>power)+((yproj>>(power-1))&1);
-        if(gridCoordinate->y<minGridY)
-            minGridY=gridCoordinate->y;
-        if(gridCoordinate->y>maxGridY)
-            maxGridY=gridCoordinate->y;
-
-
-        //Debug set point to grid coordinate.
-        pointOrig->x=a*gridCoordinate->x+b*gridCoordinate->y+origin.x;
-        pointOrig->y=c*gridCoordinate->x+d*gridCoordinate->y+origin.y;
-
-
-        //find offsets:
-        offsets->x=xproj-(gridCoordinate->x<<power);
-        offsets->y=yproj-(gridCoordinate->y<<power);
-        //add to mean caluclation;
-        //add to median calculation..
-        *xOffsetList=offsets->x;
-        *yOffsetList=offsets->y;
-        ++xOffsetList;
-        ++yOffsetList;
-    }
-    //array create..
-    ans.numCols=maxGridX-minGridX+1;
-    ans.numRows=maxGridY-minGridY+1;
-    ans.offset=(IntPoint*)malloc(sizeof(IntPoint)*ans.numCols*ans.numRows);
-    ans.pointIndex=(int*)malloc(sizeof(int)*ans.numCols*ans.numRows);
-    for(i=0;i<ans.numCols*ans.numRows;++i){
-        ans.pointIndex[i]=NOPOINT;//initialize to NOPOINT
-    }
-
-
-    //for all offsets substract mean
-
-    medianOffset.x=intListMedian(tmp1);
-    medianOffset.y=intListMedian(tmp2);
-
-    pointOrig=pointArray+n;
-    //assign points to coordinates
-    for(i=0;i<n;++i){
-        int index=(gridCoordinate[i].x-minGridX)*ans.numRows+gridCoordinate[i].y-minGridY;
-        if(ans.pointIndex[index]==NOPOINT){
-            ans.pointIndex[index]=i;
-            ans.offset[index].x=offsets[i].x-medianOffset.x;
-            ans.offset[index].y=offsets[i].y-medianOffset.y;
-
-        }
-        else{ //already a point in this space
-            //TODO: take the one with better fitting...
-        }
-
-    }
-    while(pointOrig!=pointArray){
-        pointOrig--;
-        pointOrig->x+=(a*medianOffset.x+b*medianOffset.y)>>power;
-        pointOrig->y+=(c*medianOffset.x+d*medianOffset.y)>>power;
-    }
-    ans.origin=origin;
-    intPointAdd(&(ans.origin),a*minGridX +b* minGridY,c*minGridX+d*minGridY);
-    intPointAdd(&(ans.origin),(a*medianOffset.x+b*medianOffset.y)>>power,(c*medianOffset.x+d*medianOffset.y)>>power);
-    free(tmp1.list);
-    free(tmp2.list);
-    //    //Debug test offset length
-    //    double sum=0;
-    //    for(i=0;i<n;i++){
-    //        int dx=offsets[i].x-medianOffset.x;
-    //        int dy=offsets[i].y-medianOffset.y;
-    //        sum +=sqrt(dx*dx+dy*dy);
-    //    }
-    //    sum/=n;
-    free(offsets);
-    //free(pointOrig); creates problem :D
-    free(gridCoordinate);
-    return ans;
-
-}
 
 #ifdef __cplusplus
 }

@@ -93,24 +93,6 @@ void drawLines(Mat &I, IntPoint *pointArray, Edge *edges, int n, int mul,Scalar 
 
     }
 }
-void drawSquare(Mat &I, IntPoint *means, Grid * g, IntPoint upLeft,int sideLength,int mul){
-    --sideLength;
-//    sideLength*=-1;
-//    upLeft.x=8;
-//    upLeft.y=5;
-    Point p0((g->origin.x+(upLeft.x)*means[0].x+upLeft.y*means[1].x)/mul,(g->origin.y+upLeft.x*means[0].y+upLeft.y*means[1].y)/mul);
-    Point p1((g->origin.x+(upLeft.x+sideLength)*means[0].x+upLeft.y*means[1].x)/mul,(g->origin.y+(upLeft.x+sideLength)*means[0].y+upLeft.y*means[1].y)/mul);
-    Point p2((g->origin.x+(upLeft.x+sideLength)*means[0].x+(upLeft.y+sideLength)*means[1].x)/mul,(g->origin.y+(upLeft.x+sideLength)*means[0].y+(upLeft.y+sideLength)*means[1].y)/mul);
-    Point p3((g->origin.x+(upLeft.x)*means[0].x+(upLeft.y+sideLength)*means[1].x)/mul,(g->origin.y+(upLeft.x)*means[0].y+(upLeft.y+sideLength)*means[1].y)/mul);
-
-
-    Scalar color(255,0,255);
-    line(I,p0,p1,color,3);
-    line(I,p2,p1,color,3);
-    line(I,p2,p3,color,3);
-    line(I,p0,p3,color,3);
-}
-
 
 
 
