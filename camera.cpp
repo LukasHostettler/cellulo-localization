@@ -125,9 +125,9 @@ void printIntGrid(Mat &I,IntGrid g,IntPoint *means,IntPoint origin,int subdivisi
 }
 void printSquare(Mat &I,int row, int col, IntPoint * means,IntPoint origin, int subdivision,Scalar color=Scalar(255,0,255)){
     Point pt0=transformFromIdx(col,row,means,origin,subdivision);
-    Point pt1=transformFromIdx(col+8,row,means,origin,subdivision);
-    Point pt2=transformFromIdx(col+8,row+8,means,origin,subdivision);
-    Point pt3=transformFromIdx(col,row+8,means,origin,subdivision);
+    Point pt1=transformFromIdx(col+7,row,means,origin,subdivision);
+    Point pt2=transformFromIdx(col+7,row+7,means,origin,subdivision);
+    Point pt3=transformFromIdx(col,row+7,means,origin,subdivision);
 
     circle(I,pt0,10,color);
     line(I,pt0,pt1,color);
@@ -164,7 +164,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
 
     //!setup next threshold
 
-     linkedKMeans(edges,means,numEdges);
+    linkedKMeans(edges,means,numEdges);
 
     i=0;
     IntPoint cross=pointArray[segList.numElements/2];
@@ -178,7 +178,6 @@ bool Camera::segment(Mat &I, double thresholdValue){
 
     //drawDirections(I,pointArray,segList.numElements,subdivision,means[0]);
     //drawDirections(I,pointArray,segList.numElements,subdivision,means[1],255.0);
-
     waitKey(10);
     if(correctMeanLength(pointArray,means,10,segList.numElements,&cross)&&segList.numElements>64){
         //copy pointArray to gridArray...
@@ -201,16 +200,21 @@ bool Camera::segment(Mat &I, double thresholdValue){
             int a=forwardProbability(probGrids.prob2,nRow,nCol);
             int b=downwardProbability(probGrids.prob1,nRow,nCol);
             cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<a<<" b: "<<b<<endl;
-            rotationDecoderUpdate(&rotDec,-b,-a);
-            cout<<rotationDecoderUpdateMeans(&rotDec,means)<<endl;
+            rotationDecoderUpdate(&rotDec,b,a);
+            if(!rotationDecoderUpdateMeans(&rotDec,means)){
+                int xPos=0;
+                int yPos=0;
+
+
+            }
+            else
+                cout<<"turned"<<endl;
         }
         dotInfoFree(&dotInfo);
         drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));
 
 
-        probabilityGridsFree(&probGrids);
-
-
+        probabilityGridsFree(&probGrids); 
         free(gridArray);
     }
     else{
@@ -225,4 +229,3 @@ bool Camera::segment(Mat &I, double thresholdValue){
     imgSegListFree(&segList);
     return ans;
 }
-
