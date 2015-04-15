@@ -13,7 +13,7 @@ static int mainLookUp[]={-1,0,-1,1,-1,-1,-1,-1,2,-1,-1,-1,-1,19,-1,-1,-1,-1,3,-1
 //    return (x + (x >> 31)) ^ (x >> 31);
 //}
 
-#define MEAN_OFFSET 200 /* USUAL OFFSET*/
+#define MEAN_OFFSET 240 /* USUAL OFFSET*/
 #define PROB_MAX 1024L  /*Defines the Vertical Height at the peak  */
 #define POWERSHIFT 21 /* SHIFT USED TO AVOID FLOATS */
 #define FACTOR_B 3L*MEAN_OFFSET*MEAN_OFFSET
@@ -57,11 +57,11 @@ int forwardProbability(IntGrid g,int startRow,int startCol){
         }
         probability=abs(probability);
         if(mainLookUp[lookup]>=0)
-            votes+=probability;
+            votes-=probability;
         //reverse 8-bit lookup
         lookup = ((lookup * 0x0802LU & 0x22110LU) | (lookup * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
         if(mainLookUp[(~lookup)&0xFF]>=0)
-            votes-=probability;
+            votes+=probability;
     }
     return (votes);
 }
@@ -77,15 +77,78 @@ int downwardProbability(IntGrid g,int startRow,int startCol){
         }
         probability=abs(probability);
         if(mainLookUp[lookup]>=0)
-            votes+=probability;
+            votes-=probability;
         //reverse 8-bit lookup
         lookup = ((lookup * 0x0802LU & 0x22110LU) | (lookup * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
         if(mainLookUp[(~lookup)&0xFF]>=0)
-            votes-=probability;
+            votes+=probability;
     }
     return (votes);
 }
 
+#define ROTATION_DECODER_AWR (1500)
+void rotationDecoderReset(RotationDecoder * rot){
+    rot->x=0;
+    rot->y=0;
+}
+void rotationDecoderDiminuish(RotationDecoder * rot){
+    rot->x/=4;
+    rot->y/=4;
+}
 
+void rotationDecoderUpdate(RotationDecoder * rot, int rotProb1, int rotProb2){
+    rot->x+=rotProb1;
+    rot->y+=rotProb2;
+    if(rot->x>ROTATION_DECODER_AWR)
+        rot->x=ROTATION_DECODER_AWR;
+    else if(rot->x< -ROTATION_DECODER_AWR)
+        rot->x=-ROTATION_DECODER_AWR;
+    if(rot->y>ROTATION_DECODER_AWR)
+        rot->y=ROTATION_DECODER_AWR;
+    else if(rot->y< -ROTATION_DECODER_AWR)
+        rot->y=-ROTATION_DECODER_AWR;
+}
+int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
+    int rotated=0;
+    if(rot->x<0 && rot->y<0){ //complete opposite
+        intPointMul(means+0,-1);
+        intPointMul(means+1,-1);
+        rot->x*=-1;
+        rot->y*=-1;
+        rotated=1;
+    }
+    else if(rot->x<0){
+        IntPoint tmpMeans=means[0];
+        //intPointMul(&tmpMeans,-1);
+        intPointMul(means+1,-1);
+        means[0]=means[1];
+
+
+        means[1]=tmpMeans;
+
+        //rot->x*=-1;
+        int tmp=rot->x*-1;
+        rot->x=rot->y;
+        rot->y=0;//tmp;
+        rotated=1;
+    }
+    else if(rot->y<0){
+        //swap
+        IntPoint tmpMeans=means[1];
+        //intPointMul(&tmpMeans,-1);
+        intPointMul(means+0,-1);
+        means[1]=means[0];
+
+        means[0]=tmpMeans;
+
+//        rot->y*=-1;
+        int tmp=rot->y*-1;
+        rot->y=rot->x;
+        rot->x=0;
+        rotated=1;
+    }
+    return rotated;
+
+}
 
 

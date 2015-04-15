@@ -33,6 +33,7 @@ public:
 private:
     cv::VideoCapture cap;
     IntPoint *means;
+    RotationDecoder rotDec;
 };
 
 #endif // CAMERA_H

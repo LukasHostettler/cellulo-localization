@@ -12,6 +12,8 @@ typedef struct _IntPoint{
  int y;
 }IntPoint;
 
+void intPointMul(IntPoint * toMultiply,int factor);
+
 typedef struct _Neighbours{
     int neigbourIdx[4];
     int isBorderPoint;

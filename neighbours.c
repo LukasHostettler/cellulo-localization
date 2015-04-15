@@ -8,6 +8,11 @@ inline void intPointAdd(IntPoint *p,int x,int y){
     p->x+=x;
     p->y+=y;
 }
+void intPointMul(IntPoint * toMultiply,int factor){
+    toMultiply->x*=factor;
+    toMultiply->y*=factor;
+}
+
 IntPoint * sortPointArray(imgSegList list, int multiplicator){
     int i,j;
     int num=list.numElements;

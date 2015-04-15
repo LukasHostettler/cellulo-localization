@@ -24,6 +24,7 @@ Camera::Camera(int camNo)
     cout << "Frame size : " << dWidth << " x " << dHeight << endl;
     means=new IntPoint[4];
     initMeans(means,100);
+    rotationDecoderReset(&rotDec);
 }
 
 Camera::~Camera()
@@ -131,7 +132,7 @@ Point transformFromIdx(int col, int row,IntPoint *means, IntPoint origin,int sub
 }
 void printIntGrid(Mat &I,IntGrid g,IntPoint *means,IntPoint origin,int subdivision,int min=0,int max=1024*256){
     int row, col;
-
+    circle(I,Point(origin.x/subdivision,origin.y/subdivision),200,Scalar(0,0,0),3);
     for(row=0;row<g.numRows;++row){
         for(col=0;col<g.numCols;++col){
             Point center=transformFromIdx(col,row,means,origin,subdivision);
@@ -164,7 +165,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
 
     if(thresholdValue==-1){
         Scalar imgMean=mean(channels[chan]);
-        thresholdValue=imgMean(0)-8;
+        thresholdValue=imgMean(0)-10;
     }
 
     imgSegList segList=segmentImage(channels[chan].ptr(),channels[chan].rows,channels[chan].cols,thresholdValue);
@@ -181,7 +182,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
 
     //!setup next threshold
 
-    linkedKMeans(edges,means,numEdges);
+     linkedKMeans(edges,means,numEdges);
 
     i=0;
     IntPoint cross=pointArray[segList.numElements/2];
@@ -217,7 +218,9 @@ bool Camera::segment(Mat &I, double thresholdValue){
             //find orientation:
             int a=forwardProbability(probGrids.prob2,nRow,nCol);
             int b=downwardProbability(probGrids.prob1,nRow,nCol);
-            cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<"\n";
+            cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<a<<" b: "<<b<<endl;
+            rotationDecoderUpdate(&rotDec,-b,-a);
+            cout<<rotationDecoderUpdateMeans(&rotDec,means)<<endl;
         }
         dotInfoFree(&dotInfo);
         drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));
@@ -229,7 +232,8 @@ bool Camera::segment(Mat &I, double thresholdValue){
         free(gridArray);
     }
     else{
-            cout<<"above ground\n";
+            cout<<"above ground"<<endl;
+            rotationDecoderDiminuish(&rotDec);
     }
 
 
