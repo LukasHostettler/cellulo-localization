@@ -13,7 +13,7 @@ static int mainLookUp[]={-1,0,-1,1,-1,-1,-1,-1,2,-1,-1,-1,-1,19,-1,-1,-1,-1,3,-1
 //    return (x + (x >> 31)) ^ (x >> 31);
 //}
 
-#define MEAN_OFFSET 240 /* USUAL OFFSET*/
+#define MEAN_OFFSET 220 /* USUAL OFFSET*/
 #define PROB_MAX 1024L  /*Defines the Vertical Height at the peak  */
 #define POWERSHIFT 21 /* SHIFT USED TO AVOID FLOATS */
 #define FACTOR_B 3L*MEAN_OFFSET*MEAN_OFFSET

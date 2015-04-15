@@ -194,8 +194,9 @@ void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n){
     (*nRow)=tmp.numRows;
     intGridMaximum(tmp,&maxIdx);
     intGridIndToSub(maxIdx,nCol,nRow);
-    //*nCol+=n-1;
-    //*nRow+=n-1;
+    //(*nCol)--;//+=n-1;
+    //(*nRow)--;//+=n-1;
+    intGridFree(&tmp);
 }
 
 void intGridFree(IntGrid * g){
@@ -442,7 +443,7 @@ int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntP
     }
 
     intGridFree(&indiceGrid);
-
+    free(projectedArray);
     free(gridCoordinate);
     return 1;
 }

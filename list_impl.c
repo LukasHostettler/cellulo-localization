@@ -51,9 +51,13 @@ TYPE * TYPED_NAME(ListGetPointer)(TYPED_NAME(List) *dyn,int n){
 }
 
 void TYPED_NAME(ListShrink) (TYPED_NAME(List) * dyn){
-    TYPE *newList = (TYPE *)realloc(dyn->list,dyn->numElements*sizeof(TYPE));
-    if (newList!=NULL)
+    TYPE *newList =0;
+    newList = (TYPE *)realloc(dyn->list,dyn->numElements*sizeof(TYPE));
+    if (newList!=NULL){
         dyn->list=newList;
+        if(newList!=dyn->list)
+            free(dyn->list);
+    }
 }
 TYPE * TYPED_NAME(ListGetStart) ( TYPED_NAME(List) * dyn){
     return dyn->list;
