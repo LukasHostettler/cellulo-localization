@@ -202,8 +202,9 @@ bool Camera::segment(Mat &I, double thresholdValue){
             cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<a<<" b: "<<b<<endl;
             rotationDecoderUpdate(&rotDec,b,a);
             if(!rotationDecoderUpdateMeans(&rotDec,means)){
-                int xPos=0;
-                int yPos=0;
+                decodePos(probGrids.prob1,nRow,nCol);
+                //decodePos(probGrids.prob2,nRow,nCol);
+
 
 
             }
