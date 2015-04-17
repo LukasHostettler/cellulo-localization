@@ -285,7 +285,12 @@ void testSpiral(){
 //! it also provides the point of origin close to the center of points and alligned with the grid
 //! PointArray is the underlying PointCoordinates, n is the number of points
 int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntPoint * origin){
-
+    //swap vectors if order is bad
+    if(means[0].x*means[1].y-means[0].y*means[1].x<0){
+        IntPoint tmp=means[1];
+        means[1]=means[0];
+        means[0]=tmp;
+    }
     int i,j,xoffset,yoffset;
     int minGridX=INT_MAX,maxGridX=INT_MIN,minGridY=INT_MAX,maxGridY=INT_MIN;
     int a=means[0].x;// Matrix elements of matrix
@@ -375,6 +380,7 @@ int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntP
     if(itterateSpiral(indiceGrid,&rowEst,&colEst)){
         *origin=pointArray[indiceGrid.array[rowEst][colEst]];
     }
+
 
     intGridFree(&indiceGrid);
     free(projectedArray);

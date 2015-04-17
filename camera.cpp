@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <iomanip>
 #include "camera.h"
 
 
@@ -123,6 +124,32 @@ void printIntGrid(Mat &I,IntGrid g,IntPoint *means,IntPoint origin,int subdivisi
         }
     }
 }
+
+void printClassification(Mat &I,ProbabilityGrids grids,IntPoint *means,IntPoint origin,int subdivision){
+    int row, col;
+    string text;
+    int fontFace = CV_FONT_HERSHEY_PLAIN;
+    double fontScale = 0.5;
+    origin.x-=300;
+    origin.y+=300;
+    //int colorVal=(255*g.array[row][col])/ (max-min);
+    for(row=0;row<grids.maxProb.numRows;++row){
+        for(col=0;col<grids.maxProb.numCols;++col){
+            Point center=transformFromIdx(col,row,means,origin,subdivision);
+            if(grids.prob1.array[row][col]<0 &&grids.prob2.array[row][col]<0)
+                text="L";
+            else if(grids.prob1.array[row][col]>0 &&grids.prob2.array[row][col]<0)
+                text="D";
+            else if(grids.prob1.array[row][col]<0 &&grids.prob2.array[row][col]>0)
+                text="U";
+            else if(grids.prob1.array[row][col]>0 &&grids.prob2.array[row][col]>0)
+                text="R";
+            putText(I,text,center,fontFace,fontScale,Scalar(0,0,0));
+            //int fontFace, double fontScale
+        }
+    }
+}
+
 void printSquare(Mat &I,int row, int col, IntPoint * means,IntPoint origin, int subdivision,Scalar color=Scalar(255,0,255)){
     Point pt0=transformFromIdx(col,row,means,origin,subdivision);
     Point pt1=transformFromIdx(col+7,row,means,origin,subdivision);
@@ -191,16 +218,21 @@ bool Camera::segment(Mat &I, double thresholdValue){
 
         ProbabilityGrids probGrids=makeProbabilityGrids(dotInfo);
         printIntGrid(I,probGrids.maxProb,means,dotInfo.gridOrigin,subdivision);
-
+        printClassification(I,probGrids,means,dotInfo.gridOrigin,subdivision);
         if(probGrids.maxProb.numCols>=8&&probGrids.maxProb.numRows>=8){
             int nCol=0,nRow=0;
             intGridFindBestNxN(probGrids.maxProb,&nCol,&nRow,8);
             printSquare(I,nRow,nCol,means,dotInfo.gridOrigin,subdivision);
             //find orientation:
-            int a=forwardProbability(probGrids.prob2,nRow,nCol);
-            int b=downwardProbability(probGrids.prob1,nRow,nCol);
-            cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<a<<" b: "<<b<<endl;
-            rotationDecoderUpdate(&rotDec,b,a);
+            int a=forwardProbability(probGrids.prob1,nRow,nCol);
+            //int a0=forwardProbability(probGrids.prob2,nRow,nCol);
+            //int a1=forwardProbability2(probGrids.prob2,nRow,nCol,8,8);
+            //int a2=forwardProbability2(probGrids.prob2,0,nCol,probGrids.prob2.numRows,8);//worse than just lookup, sometimes???
+            //int a3=forwardProbability2(probGrids.prob2,nRow,0,8,probGrids.prob1.numCols);
+            //int a4=forwardProbability2(probGrids.prob2,0,0,probGrids.prob1.numRows,probGrids.prob1.numCols);//worse than lookup
+            int b=downwardProbability(probGrids.prob2,nRow,nCol);
+            cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<setw( 6 )<<a<<" b: "<<setw(6 )<<b<<endl;
+            rotationDecoderUpdate(&rotDec,-b,-a);
             if(!rotationDecoderUpdateMeans(&rotDec,means)){
                 decodePos(probGrids.prob1,nRow,nCol);
                 //decodePos(probGrids.prob2,nRow,nCol);
@@ -212,7 +244,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
                 cout<<"turned"<<endl;
         }
         dotInfoFree(&dotInfo);
-        drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));
+        //drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));
 
 
         probabilityGridsFree(&probGrids); 

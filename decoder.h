@@ -8,6 +8,8 @@ extern "C"
 
 #include "grid.h"
 int forwardProbability(IntGrid g, int startRow, int startCol);
+int forwardProbability2(IntGrid g, int startRow, int startCol, int numRows, int numCols);
+
 int downwardProbability(IntGrid g,int startRow,int startCol);
 IntPoint * probabilities(int *offsetsx, int *offsetsy, int n);
 

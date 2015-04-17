@@ -3,7 +3,9 @@ extern "C"
 {
 #endif
 #include <stdlib.h>
+#include "limits.h"
 #include "decoder.h"
+
 
 
 //static char mainNumberSequence[]={0,0,0,0,0,0,1,0,0,1,1,1,1,1,0,1,0,0,1,0,0,0,0,1,1,1,0,1,1,1,0,0,1,0,1,0,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,0,1,0,1,1,1,1,0,0,0,1,1};
@@ -21,7 +23,7 @@ static char c3LookUp[]={0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,
 static char c4LookUp[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3};
 
 
-static int mainLookUp[]={-1,0,-1,1,-1,-1,-1,-1,2,-1,-1,-1,-1,19,-1,-1,-1,-1,3,-1,-1,37,-1,58,-1,-1,-1,-1,20,-1,-1,-1,16,-1,-1,-1,-1,-1,4,-1,-1,30,-1,-1,38,-1,-1,59,-1,-1,-1,-1,47,-1,-1,-1,-1,-1,21,-1,-1,7,-1,-1,-1,-1,17,-1,35,-1,-1,14,-1,-1,-1,-1,-1,-1,5,-1,33,-1,-1,31,-1,-1,-1,-1,-1,-1,39,-1,-1,51,-1,60,-1,-1,-1,-1,-1,44,-1,-1,-1,-1,48,41,-1,-1,-1,-1,-1,26,-1,-1,-1,-1,22,53,-1,-1,-1,-1,8,-1,-1,-1,62,-1,-1,-1,-1,-1,18,-1,-1,-1,36,57,-1,-1,-1,15,-1,-1,-1,-1,29,-1,-1,-1,-1,46,-1,-1,-1,-1,6,-1,-1,34,-1,13,-1,-1,-1,32,-1,-1,-1,-1,-1,-1,50,-1,-1,-1,43,-1,-1,40,-1,-1,25,-1,-1,52,-1,-1,-1,61,-1,-1,-1,-1,-1,56,-1,-1,-1,28,-1,-1,45,-1,-1,-1,-1,12,-1,-1,-1,-1,49,-1,42,-1,-1,24,-1,-1,-1,-1,-1,-1,55,-1,27,-1,-1,-1,11,-1,-1,-1,-1,23,-1,-1,54,-1,-1,10,-1,-1,-1,-1,-1,9,-1,-1,-1,-1,-1,-1};//256 long 2^8
+static int mainLookUp[]={-1,-1,0,-1,1,-1,-1,-1,-1,2,-1,-1,-1,-1,19,-1,-1,-1,-1,3,-1,-1,37,-1,58,-1,-1,-1,-1,20,-1,-1,-1,16,-1,-1,-1,-1,-1,4,-1,-1,30,-1,-1,38,-1,-1,59,-1,-1,-1,-1,47,-1,-1,-1,-1,-1,21,-1,-1,7,-1,-1,-1,-1,17,-1,35,-1,-1,14,-1,-1,-1,-1,-1,-1,5,-1,33,-1,-1,31,-1,-1,-1,-1,-1,-1,39,-1,-1,51,-1,60,-1,-1,-1,-1,-1,44,-1,-1,-1,-1,48,41,-1,-1,-1,-1,-1,26,-1,-1,-1,-1,22,53,-1,-1,-1,-1,8,-1,-1,-1,62,-1,-1,-1,-1,-1,18,-1,-1,-1,36,57,-1,-1,-1,15,-1,-1,-1,-1,29,-1,-1,-1,-1,46,-1,-1,-1,-1,6,-1,-1,34,-1,13,-1,-1,-1,32,-1,-1,-1,-1,-1,-1,50,-1,-1,-1,43,-1,-1,40,-1,-1,25,-1,-1,52,-1,-1,-1,61,-1,-1,-1,-1,-1,56,-1,-1,-1,28,-1,-1,45,-1,-1,-1,-1,12,-1,-1,-1,-1,49,-1,42,-1,-1,24,-1,-1,-1,-1,-1,-1,55,-1,27,-1,-1,-1,11,-1,-1,-1,-1,23,-1,-1,54,-1,-1,10,-1,-1,-1,-1,-1,9,-1,-1,-1,-1,-1,-1};//256 long 2^8
 
 typedef struct _Coefficients{
     unsigned char c1;
@@ -66,6 +68,31 @@ int chinese_remainder(int *n, int *a, int len)
 }
 //END CRT
 
+int* mainSeqCorrelation(int *sequence, int length){
+    static int result[63];
+    int i,j;
+    for(i=0;i<63;++i){
+        result[i]=0;
+        for(j=0;j<length;++j){
+            result[i]+=sequence[j]*mainNumberSequenceForCorr[i+j];
+        }
+    }
+    return result;
+}
+int findMax(int *sequence,int length,int * maxIdx){
+    int i;
+    int maxVal=INT_MIN;
+    int tmpMaxIdx=0;
+    for(i=0;i<length;++i){
+        if(sequence[i]>maxVal){
+            maxVal=sequence[i];
+            tmpMaxIdx=i;
+        }
+    }
+    if(maxIdx)
+        *maxIdx=tmpMaxIdx;
+    return maxVal;
+}
 
 int correlationPeak(int * sequence,int length){
     int i,j;
@@ -125,6 +152,32 @@ IntPoint * probabilities(int * offsetsx,int *offsetsy,int n){
     dy/=n;
     return ans;
 }
+//correlation based prob;
+int forwardProbability2(IntGrid g, int startRow,int startCol,int numRows,int numCols){
+    int i,j,votes=0;
+    int fwdCopy[numRows];
+    int bwdCopy[numRows];
+    int *corr;
+
+    for(i=startCol;i<startCol+numCols;++i){
+    int probabilityProduct=1<<20;
+        for(j=0;j<numRows;++j){
+            fwdCopy[j]=+g.array[j+startRow][i];
+            bwdCopy[numRows-1-j]=-g.array[j+startRow][i];
+            if(fwdCopy[j])
+                probabilityProduct*=fwdCopy[j];
+            probabilityProduct>>=10;
+
+        }
+        probabilityProduct=abs(probabilityProduct>>10);
+        corr=mainSeqCorrelation(fwdCopy,numRows);
+        votes+=(probabilityProduct*findMax(corr,numRows,0))/numRows;
+        corr=mainSeqCorrelation(bwdCopy,numRows);
+        votes-=(probabilityProduct*findMax(corr,numRows,0))/numRows;
+    }
+    return votes;
+
+}
 
 int forwardProbability(IntGrid g,int startRow,int startCol){
     int i,j,lookup,probability,votes=0;
@@ -136,13 +189,15 @@ int forwardProbability(IntGrid g,int startRow,int startCol){
             probability*=g.array[j][i];
             probability>>=10;
         }
-        probability=abs(probability);
-        if(mainLookUp[lookup]>=0)
+        probability=1;//abs(probability)+500;
+
+        if(mainLookUp[lookup&0xFF]>=0)
             votes+=probability;
         //reverse 8-bit lookup
         lookup = ((lookup * 0x0802LU & 0x22110LU) | (lookup * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
         if(mainLookUp[(~lookup)&0xFF]>=0)
             votes-=probability;
+
     }
     return (votes);
 }
@@ -152,16 +207,16 @@ int downwardProbability(IntGrid g,int startRow,int startCol){
         lookup=0;
         probability=1024;
         for(j=startCol;j<startCol+8;++j){
-            lookup|= (g.array[i][j]<0)<<(j-startCol);
+            lookup|= (g.array[i][j]>=0)<<(j-startCol);
             probability*=g.array[i][j];
             probability>>=10;
         }
-        probability=abs(probability);
+        probability=1;//abs(probability)+500;
         if(mainLookUp[lookup]>=0)
             votes+=probability;
         //reverse 8-bit lookup
         lookup = ((lookup * 0x0802LU & 0x22110LU) | (lookup * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
-        if(mainLookUp[(~lookup)&0xFF]>=0)
+        if(mainLookUp[~(lookup)&0xFF]>=0)
             votes-=probability;
     }
     return (votes);
@@ -203,7 +258,7 @@ int decodePos(IntGrid g,int startRow,int startCol){
     return 0;
 }
 
-#define ROTATION_DECODER_AWR (1500)
+#define ROTATION_DECODER_AWR (30)
 void rotationDecoderReset(RotationDecoder * rot){
     rot->x=0;
     rot->y=0;
