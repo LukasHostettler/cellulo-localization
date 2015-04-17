@@ -15,9 +15,9 @@ static char mainNumberSequenceForCorr[]={-1,-1,-1,-1,-1,-1,1,-1,-1,1,1,1,1,1,-1,
 //static int diffNumberSequence2[]={};
 //static int diffNumberSequence3[]={};
 //static int diffNumberSequence4[]={};
-#define INVALID_COEFF 4;
+#define INVALID_COEFF -1
 //maybe needed to add zeros
-static char c1LookUp[]={4,4,4,4,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1};
+static char c1LookUp[]={-1,-1,-1,-1,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1};
 static char c2LookUp[]={0,0,0,0,0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,0,0,0,1,1};
 static char c3LookUp[]={0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0};
 static char c4LookUp[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3};
@@ -74,7 +74,7 @@ int* mainSeqCorrelation(int *sequence, int length){
     for(i=0;i<63;++i){
         result[i]=0;
         for(j=0;j<length;++j){
-            result[i]+=sequence[j]*mainNumberSequenceForCorr[i+j];
+            result[i]+=sequence[length-1-j]*mainNumberSequenceForCorr[i+j];
         }
     }
     return result;
@@ -105,7 +105,7 @@ int correlationPeak(int * sequence,int length){
             result[i]+=sequence[j]*mainNumberSequenceForCorr[i+j];
         }
         if(result[i]==maxResult){
-            maxIndex*=1;
+            maxIndex=maxIndex<0?-1:maxIndex;
         }
         if(result[i]>maxResult){
             maxResult=result[i];
@@ -152,32 +152,6 @@ IntPoint * probabilities(int * offsetsx,int *offsetsy,int n){
     dy/=n;
     return ans;
 }
-//correlation based prob;
-int forwardProbability2(IntGrid g, int startRow,int startCol,int numRows,int numCols){
-    int i,j,votes=0;
-    int fwdCopy[numRows];
-    int bwdCopy[numRows];
-    int *corr;
-
-    for(i=startCol;i<startCol+numCols;++i){
-    int probabilityProduct=1<<20;
-        for(j=0;j<numRows;++j){
-            fwdCopy[j]=+g.array[j+startRow][i];
-            bwdCopy[numRows-1-j]=-g.array[j+startRow][i];
-            if(fwdCopy[j])
-                probabilityProduct*=fwdCopy[j];
-            probabilityProduct>>=10;
-
-        }
-        probabilityProduct=abs(probabilityProduct>>10);
-        corr=mainSeqCorrelation(fwdCopy,numRows);
-        votes+=(probabilityProduct*findMax(corr,numRows,0))/numRows;
-        corr=mainSeqCorrelation(bwdCopy,numRows);
-        votes-=(probabilityProduct*findMax(corr,numRows,0))/numRows;
-    }
-    return votes;
-
-}
 
 int forwardProbability(IntGrid g,int startRow,int startCol){
     int i,j,lookup,probability,votes=0;
@@ -185,13 +159,13 @@ int forwardProbability(IntGrid g,int startRow,int startCol){
         lookup=0;
         probability=1024;
         for(j=startRow;j<startRow+8;++j){
-            lookup|= (g.array[j][i]<0)<<(j-startRow);
+            lookup|= (g.array[j][i]>0)<<(7-(j-startRow));
             probability*=g.array[j][i];
             probability>>=10;
         }
         probability=1;//abs(probability)+500;
 
-        if(mainLookUp[lookup&0xFF]>=0)
+        if(mainLookUp[lookup]>=0)
             votes+=probability;
         //reverse 8-bit lookup
         lookup = ((lookup * 0x0802LU & 0x22110LU) | (lookup * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
@@ -201,13 +175,13 @@ int forwardProbability(IntGrid g,int startRow,int startCol){
     }
     return (votes);
 }
-int downwardProbability(IntGrid g,int startRow,int startCol){
+int downwardProbability(IntGrid g,int startRow, int startCol){
     int i,j,lookup,probability,votes=0;
     for(i=startRow;i<startRow+8;++i){
         lookup=0;
         probability=1024;
         for(j=startCol;j<startCol+8;++j){
-            lookup|= (g.array[i][j]>=0)<<(j-startCol);
+            lookup|= (g.array[i][j]<0)<<(7-(j-startCol));
             probability*=g.array[i][j];
             probability>>=10;
         }
@@ -223,16 +197,14 @@ int downwardProbability(IntGrid g,int startRow,int startCol){
 }
 
 int getPrimaryNumberRow(IntGrid g,int row, int startCol){
-    int ans,i,lookup=0;
-    for(i=startCol;i<startCol+8;++i)
-        lookup|=(g.array[row][i]<0)<<(i-startCol);
-    ans= mainLookUp[lookup];
-    ans=correlationPeak(g.array[row]+startCol,8);
-
-    if(ans<0){
-        correlationPeak(g.array[row]+startCol,8);
-
+    int ans,j,lookup=0,sequence[8];
+    for(j=startCol;j<startCol+8;++j){
+        lookup|= (g.array[row][j]<0)<<(7-(j-startCol));
+        sequence[(j-startCol)]=-g.array[row][j];
     }
+    ans= mainLookUp[lookup];
+    if(ans==INVALID_COEFF)
+        ans= correlationPeak(sequence,8);
     return ans;
 }
 
@@ -254,6 +226,13 @@ int decodePos(IntGrid g,int startRow,int startCol){
         primaryNumberSequence[i]=getPrimaryNumberRow(g,startRow+i,startCol);
     }
     secondaryNumberSequence=getSecondaryNumberSequence(primaryNumberSequence,8);
+    for(i=0;i<7;++i){
+        //split into coefficients.
+    }
+    //lookup coefficents place in sequences;
+
+    //chinese remainder
+
     free(secondaryNumberSequence);
     return 0;
 }
