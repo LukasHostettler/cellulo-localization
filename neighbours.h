@@ -7,16 +7,18 @@ extern "C"
 #endif
 #include "list.h"
 
-typedef struct{
+typedef struct _IntPoint{
  int x;
  int y;
 }IntPoint;
 
-typedef struct{
+void intPointMul(IntPoint * toMultiply,int factor);
+
+typedef struct _Neighbours{
     int neigbourIdx[4];
     int isBorderPoint;
 }Neighbours;
-typedef struct{
+typedef struct _Edge{
     int start;
     int end;
     int dx;

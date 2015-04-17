@@ -17,18 +17,20 @@ int main(int argc, char *argv[])
     Mat frame;
 
     while(true){
-        if(cam.getRawFrame(frame)){
+//        if(cam.getRawFrame(frame)){
 
-            imshow("Color",frame);
+//            imshow("Color",frame);
 
-        }
-        if(cam.segment(frame))
+//        }
+        if(cam.segment(frame)){
 
             imshow("Segment",frame);
+            frame.release();
+        }
         if(waitKey(10)!=-1)
             break;
 
-    };
+    }
 
     return 0;
 }

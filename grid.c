@@ -8,6 +8,7 @@ extern "C"
 #include <math.h>
 #include <assert.h>
 #include "grid.h"
+#include "decoder.h"
 
 
 typedef struct{
@@ -38,6 +39,7 @@ IntGrid intGridCreate(int numCol, int numRow){
     }
     return ans;
 }
+
 
 
 IntGrid intGridCopy(IntGrid other){
@@ -175,8 +177,8 @@ int intGridMaximum(IntGrid g,int *idx){
 }
 void intGridIndToSub(int ind, int * numCol,int * numRow){
     //idx=numCols*row+col;
-    int col=ind %(*numCol);
-    int row=(ind-col)/(*numCol);
+    //int col=ind %(*numCol);
+    //int row=(ind-col)/(*numCol);
     if(numCol && numRow){
         *numRow=*numRow;
         *numRow=ind/(*numCol);
@@ -187,14 +189,15 @@ void intGridIndToSub(int ind, int * numCol,int * numRow){
 void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n){
     int maxIdx;
     //handle too small base grids
-    assert(nCol&&nRow&& *nCol>=n && *nRow>=n);
+    assert(nCol&&nRow&& grid.numCols>=n && grid.numRows>=n);
     IntGrid tmp=intGridLocalSum(grid,n);
     (*nCol)=tmp.numCols;
     (*nRow)=tmp.numRows;
     intGridMaximum(tmp,&maxIdx);
     intGridIndToSub(maxIdx,nCol,nRow);
-    //*nCol+=n-1;
-    //*nRow+=n-1;
+    //(*nCol)--;//+=n-1;
+    //(*nRow)--;//+=n-1;
+    intGridFree(&tmp);
 }
 
 void intGridFree(IntGrid * g){
@@ -220,6 +223,7 @@ void intGridTest(){
     IntGrid b=intGridCopy(a);
     b.array[1][0]=15;
     IntGrid c=intGridAdd(a,b);
+    IntGrid e=intGridCopySub(a,0,1,3,3);
     intGridApplyToEveryElement(c,&mulby2);
     IntGrid d=intGridLocalSum(c,2);
     int max, maxIdx,rowN=d.numRows,colN=d.numCols;
@@ -229,151 +233,9 @@ void intGridTest(){
     intGridFree(&b);
     intGridFree(&c);
     intGridFree(&d);
-}
-ProbabilityGrid calculateProbabilities(Grid grid,IntGrid *maxProb,float offset,int power){ //untested
-    //This function assumes a gaussian centered at offset, with with such that gauss(0)=0.25;
-    ProbabilityGrid ans;
-    offset=0.15;
-    int i,j,dx,dy,sq;
-    IntPoint baseVector[4];
-    int length=(1<<power)*(offset);
-    float c= 0.0002*1.38629/(offset*offset);
-    //c/=2<<(2*power);
-    //int c=length*length; //to be changed
-    float prob[4],sumprob;
-    for(j=0;j<4;++j){
-        baseVector[j].x=((j&2)?-length:length)*(!(j&1));
-        baseVector[j].y=((j&2)?-length:length)*(j&1);
-        ans.prob[j]=intGridCreate(grid.numCols,grid.numRows);
-    }
-    *maxProb=intGridCreate(grid.numCols,grid.numRows);
-
-    for(i=0;i<grid.numCols*grid.numRows;++i){
-        if(grid.pointIndex[i]>=0){
-            sumprob=0;
-            for(j=0;j<4;++j){
-                dx=(grid.offset[i].x-baseVector[j].x);
-                dy=(grid.offset[i].y-baseVector[j].y);
-                sq=(dx*dx+dy*dy);
-                prob[j]=exp(-sq*c);
-                sumprob+=prob[j];
-            }
-            maxProb->data[i]=0;
-            for(j=0;j<4;++j){
-                ans.prob[j].data[i]=(int)((prob[j]*(1<<power))/sumprob);
-                if(ans.prob[j].data[i]>maxProb->data[i])
-                    maxProb->data[i]=ans.prob[j].data[i];
-            }
-            dx=0;//instruction for breakpoint
-        }
-        else{
-            maxProb->data[i]=1<<(power-2);
-            for(j=0;j<4;++j){
-                ans.prob[j].data[i]=1<<(power-2);
-            }
-        }
-    }
-    return ans;
-}
-ProbabilityGrid calculateProbabilities2(Grid grid,float offset,int power){ //untested
-    int i,j,dx,dy,sq;
-    ProbabilityGrid ans;
-    IntPoint baseVector;
-    int length=(1<<power)*(offset); //to be changed
-    int c=length*length;
-    for(j=0;j<4;++j){
-        baseVector.x=((j&2)?-length:length)*(!(j&1));
-        baseVector.y=((j&2)?-length:length)*(j&1);
-        ans.prob[j]=intGridCreate(grid.numCols,grid.numRows);
-        for(i=0;i<grid.numCols*grid.numRows;++i){
-            if(grid.pointIndex[i]>=0){
-                dx=grid.offset[i].x-baseVector.x;
-                dy=grid.offset[i].y-baseVector.y;
-                sq=(dx*dx+dy*dy)/c;
-                ans.prob[j].data[i]=(1<<power)*exp(-sq);//find a replacement for this line..
-            }
-            else
-                ans.prob[j].data[i]=1<<(power-2);
-        }
-    }
-    //normalisation;
-
-    IntGrid sum=intGridCopy(ans.prob[0]);
-    for(i=1;i<4;i++)
-        intGridAddTo(sum, ans.prob[j]);
-    for(i=0;i<4;i++)
-        for(j=0;j<sum.numCols*sum.numRows;++j){
-            if(sum.data[i])
-                ans.prob[j].data[i]=(ans.prob[j].data[i]<<power)/sum.data[i];
-        }
-    return ans;
+    intGridFree(&e);
 }
 
-void calculateProbabilities1(Grid grid,float offset,int power){
-    int i,j,dx,dy,sq;
-    IntPoint baseVector[4];
-    int length=(1<<power)*(offset);
-    int c=length*length; //to be changed
-    float prob[4],sumprob;
-    for(j=0;j<4;++j){
-        baseVector[j].x=((j&2)?-length:length)*(!(j&1));
-        baseVector[j].y=((j&2)?-length:length)*(j&1);
-        grid.probabilities[j]=(int *)malloc(sizeof(int)*grid.numCols*grid.numRows);
-    }
-    grid.max_probablitiy=(int *)malloc(sizeof(int)*grid.numCols*grid.numRows);
-
-    for(i=0;i<grid.numCols*grid.numRows;++i){
-        if(grid.pointIndex[i]>=0){
-            sumprob=0;
-            for(j=0;j<4;++j){
-                dx=(grid.offset[i].x-baseVector[j].x);
-                dy=(grid.offset[i].y-baseVector[j].y);
-                sq=(dx*dx+dy*dy)/c;
-                prob[j]=exp(-sq);
-                sumprob+=prob[j];
-            }
-            grid.max_probablitiy=0;
-            for(j=0;j<4;++j){
-                grid.probabilities[j][i]=(int)(prob[j]/sumprob*(1<<power));
-                if(grid.probabilities[j][i]>grid.max_probablitiy[i])
-                    grid.max_probablitiy[i]=grid.probabilities[j][i];
-            }
-            dx=0;
-        }
-        else{
-            grid.max_probablitiy[i]=1<<(power-2);
-            for(j=0;j<4;++j){
-                grid.probabilities[j][i]=1<<(power-2);
-            }
-        }
-    }
-}
-
-ProbabilityGrid probabilityGridConstrainToBest(ProbabilityGrid other,IntGrid max,int number){
-    assert(other.prob && other.prob[0].numCols>7 && other.prob[0].numRows>7);
-    ProbabilityGrid ans;
-    int i;
-    int nRow=other.prob[0].numRows;
-    int nCol=other.prob[0].numCols;
-    //findmax
-    //IntGrid max1=intGridMax(other.prob[0],other.prob[1]);
-    //IntGrid max2=intGridMax(other.prob[2],other.prob[3]);
-    //IntGrid max=intGridMax(max1,max2);
-    intGridFindBestNxN(max,&nCol,&nRow,number);
-    for(i=0;i<4;++i)
-        ans.prob[i]=intGridCopySub(other.prob[i],nRow,nCol,number,number);
-    //intGridFree(&max);
-    //intGridFree(&max1);
-    //intGridFree(&max2);
-    return ans;
-
-}
-void probabilityGridFree(ProbabilityGrid p){
-    int i;
-    for(i=0;i<4;i++){
-        intGridFree(p.prob+i);
-    }
-}
 
 int itterateSpiral(IntGrid g, int * x, int * y){
     int xdir=0;
@@ -402,7 +264,7 @@ int itterateSpiral(IntGrid g, int * x, int * y){
         counter++;
         *x+=xdir;
         *y+=ydir;
-        if(*x>g.numCols || *x<0 || *y<0 || *y>g.numRows)
+        if(*x>=g.numCols || *x<0 || *y<0 || *y>=g.numRows)
             return 0;
     }
     return 1;
@@ -423,7 +285,12 @@ void testSpiral(){
 //! it also provides the point of origin close to the center of points and alligned with the grid
 //! PointArray is the underlying PointCoordinates, n is the number of points
 int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntPoint * origin){
-
+    //swap vectors if order is bad
+    if(means[0].x*means[1].y-means[0].y*means[1].x<0){
+        IntPoint tmp=means[1];
+        means[1]=means[0];
+        means[0]=tmp;
+    }
     int i,j,xoffset,yoffset;
     int minGridX=INT_MAX,maxGridX=INT_MIN,minGridY=INT_MAX,maxGridY=INT_MIN;
     int a=means[0].x;// Matrix elements of matrix
@@ -509,236 +376,113 @@ int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntP
 
     int rowEst=indiceGrid.numRows/2;
     int colEst=indiceGrid.numCols/2;
-    IntPoint positionEstimate;
+
     if(itterateSpiral(indiceGrid,&rowEst,&colEst)){
-       *origin=pointArray[indiceGrid.array[rowEst][colEst]];
+        *origin=pointArray[indiceGrid.array[rowEst][colEst]];
     }
 
-    //consider only a window around center. (cross?)
-    counter =0;
-    //for(i=~(indiceGrid&1);i<indiceGrid.numRows;i++)
-//    for(i=colEst-2;i<=colEst+2;++i)
-//    {
-//        for(j=rowEst-2;j<=rowEst;++j){
-//            int idx1=indiceGrid.array[j][i];
-//            if(idx1>=0){
-//                int symmI=2*colEst-i;
-//                int symmJ=2*rowEst-j;
-//                if(symmJ>=0 && symmJ<indiceGrid.numRows && symmI>=0 && symmI<indiceGrid.numCols){
-//                    int idx2=indiceGrid.array[symmJ][symmI];
-//                    if(idx2>=0){
-//                        positionEstimate.x+=pointArray[idx1].x+pointArray[idx2].x;
-//                        positionEstimate.y+=pointArray[idx1].y+pointArray[idx2].y;
-//                        counter+=2;
-//                    }
-//                }
-
-//            }
-//        }
-
-//    }
-    if(counter){
-        positionEstimate.x/=counter;
-        positionEstimate.y/=counter;
-        *origin=positionEstimate;
-    }
 
     intGridFree(&indiceGrid);
-
+    free(projectedArray);
     free(gridCoordinate);
     return 1;
 }
+IntPoint medianCorrectOffsets(DotInformation d){
+    IntPoint median;
+    intList tmp,cpy;
+    int i;
 
-int correctMeanLength1(IntPoint * pointArray,IntPoint *means,int power,int n){
-    //power=5;
-    HelperGrid ans;
-    int i,xoffset,yoffset;
-    int corrx=1<<power,corry=1<<power;// correction, the grid should be this length..
-    int minGridX=INT_MAX,maxGridX=INT_MIN,minGridY=INT_MAX,maxGridY=INT_MIN;
-    int a=means[0].x;// Matrix elements of matrix
-    int b=means[1].x;// a b
-    int c=means[0].y;// c d
-    int d=means[1].y;//
-    int determinant=a*d-c*b;
-    if(!determinant) //skip if determinant==0;
-        return 0;
-    IntPoint origin=pointArray[n>>1]; // approx middle point
-    IntPoint * gridCoordinate=(IntPoint *)malloc(sizeof(IntPoint)*n);
-    IntPoint * grdPointer=gridCoordinate+n;
-    IntPoint * projectedArray=(IntPoint *)malloc(sizeof(IntPoint)*n)+n;
-    IntPoint * pointPointer=pointArray+n;
+    tmp.numAlloc=d.numElements;
+    tmp.numElements=d.numElements;
 
+    tmp.list=d.xoffsets;
+    cpy=intListCopy(&tmp); //used in order to not destroy the order of the list
+    median.x=intListMedian(cpy);
+    intListFree(&cpy);
 
-    while(pointPointer!=pointArray){
-        --pointPointer;
-        --projectedArray;
-        --grdPointer;
-        //project
-        xoffset=pointPointer->x-origin.x;
-        yoffset=pointPointer->y-origin.y;
-        projectedArray->x= (((long)d*xoffset-b*yoffset)<<power)/determinant;
-        projectedArray->y= (((long)-c*xoffset+a*yoffset)<<power)/determinant;
-
-
-        //assign coordinate
-        grdPointer->x=((projectedArray->x)>>power)+(((projectedArray->x)>>(power-1))&1);
-        if(grdPointer->x<minGridX)
-            minGridX=grdPointer->x;
-        if(grdPointer->x>maxGridX)
-            maxGridX=grdPointer->x;
-        grdPointer->y=(projectedArray->y>>power)+((projectedArray->y>>(power-1))&1);
-        if(grdPointer->y<minGridY)
-            minGridY=grdPointer->y;
-        if(grdPointer->y>maxGridY)
-            maxGridY=grdPointer->y;
-
+    tmp.list=d.yoffsets;
+    cpy=intListCopy(&tmp);
+    median.y=intListMedian(cpy);
+    intListFree(&cpy);
+    for(i=0;i<d.numElements;++i){
+        d.xoffsets[i]-=median.x;
+        d.yoffsets[i]-=median.y;
     }
-    ans.numCols=maxGridX-minGridX+1;
-    ans.numRows=maxGridY-minGridY+1;
-    ans.indices=(int*)malloc(sizeof(int)*ans.numCols*ans.numRows);
-    for(i=0;i<ans.numCols*ans.numRows;++i){
-        ans.indices[i]=NOPOINT;//initialize to NOPOINT
-    }
-    //assign points to coordinates
-    //row major
-    for(i=0;i<n;++i){
-        int index=(gridCoordinate[i].x-minGridX)+(gridCoordinate[i].y-minGridY)*ans.numCols;
-        if(ans.indices[index]==NOPOINT)
-            ans.indices[index]=i;
-        else
-            ans.indices[index]=-2;//mark point as double
-    }
-
-
-    //for all rows
-    long accumulator=0;
-    //EXCLUDING OUTERMOST DOESENT WORK... ?
-    int counter=0;
-    for(i=0;i<ans.numRows;++i){
-        int minIdx=i*ans.numCols;
-        int maxIdx=minIdx+ans.numCols-1;
-        while(minIdx!=maxIdx && ans.indices[minIdx++]<0); //find first occurence
-        while(minIdx!=maxIdx && ans.indices[minIdx]<0)
-            ++minIdx;
-        while(minIdx!=maxIdx &&ans.indices[maxIdx--]<0);
-        while(minIdx!=maxIdx &&ans.indices[maxIdx]<0)
-            --maxIdx;
-        int diffIdx=maxIdx-minIdx;
-        if(diffIdx){ //if both sides are different
-            counter+=diffIdx;
-            accumulator+=projectedArray[ans.indices[maxIdx]].x-projectedArray[ans.indices[minIdx]].x;
-        }
-    }
-    if(counter){//if there are some lines detected, take mean
-        corrx=accumulator/counter;
-
-        means[0].x=(a*corrx)>>power;
-        means[0].y=(c*corrx)>>power;
-    }
-
-    //for all cols
-    accumulator=0;
-    counter=0;
-    for(i=0;i<ans.numRows;++i){
-        int minIdx=i;
-        int maxIdx=i+(ans.numRows)*(ans.numCols-1);
-        while(minIdx!=maxIdx &&ans.indices[minIdx]<0)
-            minIdx+=ans.numRows;
-        if(minIdx!=maxIdx)
-            minIdx+=ans.numRows;
-        while(minIdx!=maxIdx &&ans.indices[minIdx]<0)
-            minIdx+=ans.numRows;
-
-        while(minIdx!=maxIdx &&ans.indices[maxIdx]<0)
-            maxIdx-=ans.numRows;
-        if(minIdx!=maxIdx)
-            maxIdx-=ans.numRows;
-        while(minIdx!=maxIdx &&ans.indices[maxIdx]<0)
-            maxIdx-=ans.numRows;
-        int diffIdx=(maxIdx-minIdx)/ans.numCols;
-        if(diffIdx){ //if both sides are different
-            counter+=diffIdx;
-            accumulator+=projectedArray[ans.indices[maxIdx]].y-projectedArray[ans.indices[minIdx]].y;
-        }
-    }
-    if(counter){//if there are some lines detected, take mean
-        corry=accumulator/counter;
-        means[1].x=(b*corry)>>power;
-        means[1].y=(d*corry)>>power;
-    }
-
-
-
-
-    //free list
-    free(gridCoordinate);
-    free(ans.indices);
-    return 1;
+    return median;
 }
 
 
-Grid makeGrid(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint origin){
-    //power determines the precicision left for position estimation.
-    //handle the offset in an appropriate manner
-    //handle undefined means..
-    Grid ans;
-    ans.numCols=0;
-    ans.numRows=0;
-    int i,xoffset,yoffset,minGridX=INT_MAX,maxGridX=INT_MIN,minGridY=INT_MAX,maxGridY=INT_MIN;
-    IntPoint meanOffset={0,0},medianOffset;
+DotInformation dotInfoCreateEmpty(){
+    DotInformation ans;
+    ans.numElements=0;
+    ans.gridMaxCols=0;
+    ans.gridMaxRows=0;
+    ans.xoffsets=0;
+    ans.yoffsets=0;
+    ans.gridCoordinate=0;
+    return ans;
+}
+void dotInfoFree(DotInformation *d){
+    if(d){
+        d->numElements=0;
+        d->gridMaxCols=0;
+        d->gridMaxRows=0;
+        if(d->xoffsets)
+            free(d->xoffsets);
+        if(d->yoffsets)
+            free(d->yoffsets);
+        if(d->gridCoordinate)
+            free(d->gridCoordinate);
+        d->xoffsets=0;
+        d->yoffsets=0;
+        d->gridCoordinate=0;
+    }
+
+}
+
+DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int numPoints,IntPoint origin){
+    DotInformation ans=dotInfoCreateEmpty();
+    int xoffset,yoffset,xproj,yproj,minGridX=INT_MAX,maxGridX=INT_MIN,minGridY=INT_MAX,maxGridY=INT_MIN;
+    IntPoint medianOffset;
     //matrix [a b ;c d];
     int a=means[0].x;
     int b=means[1].x;
     int c=means[0].y;
     int d=means[1].y;
-    int * xOffsetList=(int *)malloc(sizeof(int)*n);
-    int * yOffsetList=(int *)malloc(sizeof(int)*n);
-    IntPoint * pointOrig=pointArray+n;
-    IntPoint * offsets=(IntPoint *)malloc(sizeof(IntPoint)*n)+n;
-    IntPoint * gridCoordinate=(IntPoint *)malloc(sizeof(IntPoint)*n)+n;
     int determinant=a*d-c*b;
-    if(!determinant ||n<1)
+    if(!determinant ||numPoints<1)
         return ans;
-    intList tmp1,tmp2;
-    tmp1.numAlloc=n;
-    tmp1.numElements=n;
-    tmp1.list=xOffsetList;
-    tmp2.numAlloc=n;
-    tmp2.numElements=n;
-    tmp2.list=yOffsetList;
-
-    //find approximate middle in list
-    //IntPoint origin=pointArray[n>>1];
-
-    //Debug:
-    //origin.x=128*180;
-    //origin.y=128*120;
-
-    while(pointOrig!=pointArray){
-        --pointOrig;
-        --offsets;
-        --gridCoordinate;
 
 
+    ans.numElements=numPoints;
+    ans.xoffsets=(int *)malloc(sizeof(int)*numPoints);
+    ans.yoffsets=(int *)malloc(sizeof(int)*numPoints);
+    ans.gridCoordinate=(IntPoint *)malloc(sizeof(IntPoint)*numPoints);
+
+    IntPoint * pointOrig=pointArray; //pointer trough pointArray;
+    int * xoffsets=ans.xoffsets; // pointer through offsetArray
+    int * yoffsets=ans.yoffsets; // pointer through offsetArray
+    IntPoint * gridCoordinate=ans.gridCoordinate; //pointer trough gridCoordiates
+    while(pointOrig<pointArray+numPoints){
         //project
         xoffset=pointOrig->x-origin.x;
         yoffset=pointOrig->y-origin.y;
-        int xproj= ((long)(d*xoffset-b*yoffset)<<power)/determinant;
-        int yproj= ((long)(-c*xoffset+a*yoffset)<<power)/determinant;
-
+        xproj= ((long)(d*xoffset-b*yoffset)<<power)/determinant;
+        yproj= ((long)(-c*xoffset+a*yoffset)<<power)/determinant;
 
         //assign coordinate
         gridCoordinate->x=(xproj>>power)+((xproj>>(power-1))&1);
+        gridCoordinate->y=(yproj>>power)+((yproj>>(power-1))&1);
+
+        //update minMax
         if(gridCoordinate->x<minGridX)
             minGridX=gridCoordinate->x;
         if(gridCoordinate->x>maxGridX)
             maxGridX=gridCoordinate->x;
-        gridCoordinate->y=(yproj>>power)+((yproj>>(power-1))&1);
         if(gridCoordinate->y<minGridY)
             minGridY=gridCoordinate->y;
         if(gridCoordinate->y>maxGridY)
             maxGridY=gridCoordinate->y;
-
 
         //Debug set point to grid coordinate.
         pointOrig->x=a*gridCoordinate->x+b*gridCoordinate->y+origin.x;
@@ -746,187 +490,71 @@ Grid makeGrid(IntPoint * pointArray,IntPoint * means,int power,int n,IntPoint or
 
 
         //find offsets:
-        offsets->x=xproj-(gridCoordinate->x<<power);
-        offsets->y=yproj-(gridCoordinate->y<<power);
-        //add to mean caluclation;
-        //add to median calculation..
-        *xOffsetList=offsets->x;
-        *yOffsetList=offsets->y;
-        ++xOffsetList;
-        ++yOffsetList;
+        *xoffsets=xproj-(gridCoordinate->x<<power);
+        *yoffsets=yproj-(gridCoordinate->y<<power);
+
+        //Increment pointers;
+        ++pointOrig;
+        ++xoffsets;
+        ++yoffsets;
+        ++gridCoordinate;
     }
-    //array create..
-    ans.numCols=maxGridX-minGridX+1;
-    ans.numRows=maxGridY-minGridY+1;
-    ans.offset=(IntPoint*)malloc(sizeof(IntPoint)*ans.numCols*ans.numRows);
-    ans.pointIndex=(int*)malloc(sizeof(int)*ans.numCols*ans.numRows);
-    for(i=0;i<ans.numCols*ans.numRows;++i){
-        ans.pointIndex[i]=NOPOINT;//initialize to NOPOINT
+    ans.gridMaxRows=maxGridX-minGridX+1;
+    ans.gridMaxCols=maxGridY-minGridY+1;
+
+    //Shift coordinates to be positive.
+    for(gridCoordinate=ans.gridCoordinate;gridCoordinate<ans.gridCoordinate+ans.numElements;++gridCoordinate){
+        intPointAdd(gridCoordinate,-minGridX,-minGridY);
     }
 
+    medianOffset =medianCorrectOffsets(ans);
 
-    //for all offsets substract mean
-
-    medianOffset.x=intListMedian(tmp1);
-    medianOffset.y=intListMedian(tmp2);
-
-    pointOrig=pointArray+n;
-    //assign points to coordinates
-    for(i=0;i<n;++i){
-        int index=(gridCoordinate[i].x-minGridX)*ans.numRows+gridCoordinate[i].y-minGridY;
-        if(ans.pointIndex[index]==NOPOINT){
-            ans.pointIndex[index]=i;
-            ans.offset[index].x=offsets[i].x-medianOffset.x;
-            ans.offset[index].y=offsets[i].y-medianOffset.y;
-
-        }
-        else{ //already a point in this space
-            //TODO: take the one with better fitting...
-        }
-
-    }
     while(pointOrig!=pointArray){
         pointOrig--;
         pointOrig->x+=(a*medianOffset.x+b*medianOffset.y)>>power;
         pointOrig->y+=(c*medianOffset.x+d*medianOffset.y)>>power;
     }
-    free(tmp1.list);
-    free(tmp2.list);
-    //    //Debug test offset length
-    //    double sum=0;
-    //    for(i=0;i<n;i++){
-    //        int dx=offsets[i].x-medianOffset.x;
-    //        int dy=offsets[i].y-medianOffset.y;
-    //        sum +=sqrt(dx*dx+dy*dy);
-    //    }
-    //    sum/=n;
-    free(offsets);
-    //free(pointOrig); creates problem :D
-    free(gridCoordinate);
+    ans.gridOrigin=origin;
+    intPointAdd(&(ans.gridOrigin),a*minGridX +b* minGridY,c*minGridX+d*minGridY);
+    intPointAdd(&(ans.gridOrigin),(a*medianOffset.x+b*medianOffset.y)>>power,(c*medianOffset.x+d*medianOffset.y)>>power);
+    return ans;
+}
+
+ProbabilityGrids makeProbabilityGrids(DotInformation dotInfo){
+    ProbabilityGrids ans;
+    IntPoint *probs= probabilities(dotInfo.xoffsets, dotInfo.yoffsets,dotInfo.numElements);
+    ans.prob1=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(ans.prob1,0);
+    ans.prob2=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(ans.prob2,0);
+    ans.maxProb=intGridCreate(dotInfo.gridMaxCols,dotInfo.gridMaxRows);
+    intGridFill(ans.maxProb,0);
+
+    int probProduct, i;
+    for(i=0;i<dotInfo.numElements;++i){
+        probProduct =abs(probs[i].x*probs[i].y);
+        IntPoint coord=dotInfo.gridCoordinate[i];
+        if(probProduct>=ans.maxProb.array[coord.x][coord.y]){
+            ans.maxProb.array[coord.x][coord.y]=probProduct;
+            ans.prob1.array[coord.x][coord.y]=probs[i].x;
+            ans.prob2.array[coord.x][coord.y]=probs[i].y;
+        }
+
+    }
+    free(probs);
+    //temporary
+
     return ans;
 
 }
 
-/*
-Grid makeGrid2(IntPoint * pointArray,IntPoint * means,int power,int n){
-    //power determines the precicision left for position estimation.
-    //handle the offset in an appropriate manner
-    //handle undefined means..
-    Grid ans;
-    ans.numCols=0;
-    ans.numRows=0;
-    int i,xoffset,yoffset,minGridX=INT_MAX,maxGridX=INT_MIN,minGridY=INT_MAX,maxGridY=INT_MIN;
-    IntPoint meanOffset={0,0},medianOffset;
-    //matrix [a b ;c d];
-    int a=means[0].x;
-    int b=means[1].x;
-    int c=means[0].y;
-    int d=means[1].y;
-    int * xOffsetList=(int *)malloc(sizeof(int)*n);
-    int * yOffsetList=(int *)malloc(sizeof(int)*n);
-    IntPoint * pointOrig=pointArray+n;
-    IntPoint * offsets=(IntPoint *)malloc(sizeof(IntPoint)*n)+n;
-    IntPoint * gridCoordinate=(IntPoint *)malloc(sizeof(IntPoint)*n)+n;
-    int determinant=a*d-c*b;
-    if(!determinant ||n<1)
-        return ans;
-    intList tmp1,tmp2;
-    tmp1.numAlloc=n;
-    tmp1.numElements=n;
-    tmp1.list=xOffsetList;
-    tmp2.numAlloc=n;
-    tmp2.numElements=n;
-    tmp2.list=yOffsetList;
-
-    //find approximate middle in list
-    IntPoint origin=pointArray[n>>1];
-
-    //Debug:
-    //IntPoint origin ={128*180,128*120};
-    while(pointOrig!=pointArray){
-        --pointOrig;
-        --offsets;
-        --gridCoordinate;
+void probabilityGridsFree(ProbabilityGrids * grid){
+    intGridFree(&(grid->maxProb));
+    intGridFree(&grid->prob1);
+    intGridFree(&grid->prob2);
+}
 
 
-        //project
-        xoffset=pointOrig->x-origin.x;
-        yoffset=pointOrig->y-origin.y;
-        int xproj= ((long)(d*xoffset-b*yoffset)<<power)/determinant;
-        int yproj= ((long)(-c*xoffset+a*yoffset)<<power)/determinant;
-
-
-        //assign coordinate
-        gridCoordinate->x=(xproj>>power)+((xproj>>(power-1))&1);
-        if(gridCoordinate->x<minGridX)
-            minGridX=gridCoordinate->x;
-        if(gridCoordinate->x>maxGridX)
-            maxGridX=gridCoordinate->x;
-        gridCoordinate->y=(yproj>>power)+((yproj>>(power-1))&1);
-        if(gridCoordinate->y<minGridY)
-            minGridY=gridCoordinate->y;
-        if(gridCoordinate->y>maxGridY)
-            maxGridY=gridCoordinate->y;
-
-
-        //Debug set point to grid coordinate.
-        pointOrig->x=a*gridCoordinate->x+b*gridCoordinate->y+origin.x;
-        pointOrig->y=c*gridCoordinate->x+d*gridCoordinate->y+origin.y;
-
-
-        //find offsets:
-        offsets->x=xproj-(gridCoordinate->x<<power);
-        offsets->y=yproj-(gridCoordinate->y<<power);
-        //add to mean caluclation;
-        //add to median calculation..
-        *xOffsetList=offsets->x;
-        *yOffsetList=offsets->y;
-        ++xOffsetList;
-        ++yOffsetList;
-    }
-    //array create..
-    ans.numCols=maxGridX-minGridX+1;
-    ans.numRows=maxGridY-minGridY+1;
-    ans.offset=(IntPoint*)malloc(sizeof(IntPoint)*ans.numCols*ans.numRows);
-    ans.pointIndex=(int*)malloc(sizeof(int)*ans.numCols*ans.numRows);
-    for(i=0;i<ans.numCols*ans.numRows;++i){
-       ans.pointIndex[i]=NOPOINT;//initialize to NOPOINT
-    }
-
-
-    //for all offsets substract mean
-
-    medianOffset.x=intListMedian(tmp1);
-    medianOffset.y=intListMedian(tmp2);
-
-    pointOrig=pointArray+n;
-    //assign points to coordinates
-    for(i=0;i<n;++i){
-        int index=(gridCoordinate[i].x-minGridX)*ans.numRows+gridCoordinate[i].y-minGridY;
-        if(ans.pointIndex[index]==NOPOINT){
-            ans.pointIndex[index]=i;
-            ans.offset[index].x=offsets[i].x-medianOffset.x;
-            ans.offset[index].y=offsets[i].y-medianOffset.y;
-
-        }
-        else{ //already a point in this space
-            //take the one with better fitting...
-        }
-
-    }
-    while(pointOrig!=pointArray){
-        pointOrig--;
-        pointOrig->x+=(a*medianOffset.x+b*medianOffset.y)>>power;
-        pointOrig->y+=(c*medianOffset.x+d*medianOffset.y)>>power;
-    }
-    free(tmp1.list);
-    free(tmp2.list);
-    free(offsets);
-    free(pointOrig);
-    free(gridCoordinate);
-    return ans;
-
-}*/
 #ifdef __cplusplus
 }
 #endif

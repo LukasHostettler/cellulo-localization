@@ -8,6 +8,11 @@ inline void intPointAdd(IntPoint *p,int x,int y){
     p->x+=x;
     p->y+=y;
 }
+void intPointMul(IntPoint * toMultiply,int factor){
+    toMultiply->x*=factor;
+    toMultiply->y*=factor;
+}
+
 IntPoint * sortPointArray(imgSegList list, int multiplicator){
     int i,j;
     int num=list.numElements;
@@ -185,10 +190,10 @@ int findCross(Neighbours * neigh, IntPoint *coords,int numNeigh,IntPoint * cross
 
 void initMeans(IntPoint *means, int r){
     int i;
-    means[0].x=0;
-    means[0].y=r;
-    means[1].x=r;
-    means[1].y=0;
+    means[0].x=r;
+    means[0].y=0;
+    means[1].x=0;
+    means[1].y=r;
     for(i=2;i<4;++i){
         means[i].x=-means[i-2].x;
         means[i].y=-means[i-2].y;
@@ -215,6 +220,7 @@ int quickPartition(int * list, int left,int right,int pivotIndex){
     list[storeIndex]=tmp;
     return storeIndex;
 }
+//Attention! This function changes the order of the content of list
 int quickSelect(int * list, int left,int right,int n){
     if (left==right)
         return list[left];
