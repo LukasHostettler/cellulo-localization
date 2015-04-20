@@ -1,0 +1,27 @@
+
+#Altium
+History/
+__Previews/
+*.LOG
+Design Rule Check*
+*.PrjPCBStructure
+Project Outputs for */
+Project Outputs/
+
+#Solidworks
+~$*.SLDPRT
+~$*.SLDASM
+~$*.sldprt
+~$*.sldasm
+
+#MPLABX
+build/
+debug/
+dist/
+/**/nbproject/Makefile-*
+/**/nbproject/Package-*
+/**/nbproject/private/
+
+#Qt
+*.user*
+build*/
