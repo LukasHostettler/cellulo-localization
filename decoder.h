@@ -20,7 +20,7 @@ void rotationDecoderUpdate(RotationDecoder * rot, int rotProb1,int   rotProb2);
 int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means);
 void rotationDecoderDiminuish(RotationDecoder * rot);
 
-int decodePos(IntGrid g,int startRow,int startCol);
+IntPoint decodePos(ProbabilityGrids probGrids,int startRow,int startCol);
 
 
 #ifdef __cplusplus

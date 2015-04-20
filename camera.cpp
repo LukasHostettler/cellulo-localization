@@ -231,11 +231,11 @@ bool Camera::segment(Mat &I, double thresholdValue){
             //int a3=forwardProbability2(probGrids.prob2,nRow,0,8,probGrids.prob1.numCols);
             //int a4=forwardProbability2(probGrids.prob2,0,0,probGrids.prob1.numRows,probGrids.prob1.numCols);//worse than lookup
             int b=downwardProbability(probGrids.prob2,nRow,nCol);
-            cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<setw( 6 )<<a<<" b: "<<setw(6 )<<b<<endl;
+            //cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<setw( 6 )<<a<<" b: "<<setw(6 )<<b<<endl;
             rotationDecoderUpdate(&rotDec,b,a);
             if(!rotationDecoderUpdateMeans(&rotDec,means)){
-                decodePos(probGrids.prob2,nRow,nCol);
-                //decodePos(probGrids.prob2,nRow,nCol);
+                IntPoint pos=decodePos(probGrids,nRow,nCol);
+                cout<<"x: "<<pos.x-nRow<<" y: "<<pos.y-nCol<<endl;
 
 
 
