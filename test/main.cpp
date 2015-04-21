@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "imgsegment.h"
 #include "camera.h"
 #include <QApplication>
 #include <iostream>
