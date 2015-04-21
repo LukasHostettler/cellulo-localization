@@ -2,12 +2,15 @@
 #define CAMERA_H
 #include <opencv2/opencv.hpp>
 
-#include "list.h"
-#include "imgsegment.h"
-#include "imgproc.h"
-#include "neighbours.h"
-#include "grid.h"
-#include "decoder.h"
+
+#include <cellulo_localization_global.h>
+
+#include "../src/list.h"
+#include "../src/imgsegment.h"
+#include "../src/imgproc.h"
+#include "../src/neighbours.h"
+#include "../src/grid.h"
+#include "../src/decoder.h"
 
 
 
