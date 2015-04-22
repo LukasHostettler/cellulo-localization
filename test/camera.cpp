@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include <iomanip>
+#include <math.h>
 #include "camera.h"
 
 
@@ -35,17 +36,27 @@ Camera::~Camera()
 }
 
 void Camera::drawRobot(int width, int height,int radius){
-    Scalar backGround(255,255,255);
+    static Scalar backGround(255,255,255);
+
     switch(actualRobotPosition.y/1000){
+    case 1:
+        backGround=Scalar(255,255,255);//w
     case 2:
         backGround=Scalar(140,140,255);//r
         break;
-    case 3:
-        backGround=Scalar(140,255,255);
+    case 5:
+        backGround=Scalar(140,255,255);//y
 
         break;
     case 4:
-        backGround=Scalar(140,255,140);
+        backGround=Scalar(140,255,140);//g
+    case 3:
+        IntPoint knobPos[3]={{50,3400},{155,3400},{266,3400}};
+        for(int i=0;i<3;i++)
+        if(intPointSquareDist(knobPos[i],actualRobotPosition)<30*30){
+            backGround.val[i]=255*(atan2(means->x,means->y)+M_PI)/(2*M_PI);
+        }
+
         break;
     //default:
     }

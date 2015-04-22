@@ -27,6 +27,10 @@ typedef struct _Edge{
 }Edge;
 
 void intPointAdd(IntPoint *p,int x,int y);
+static inline int intPointSquareDist(IntPoint p1,IntPoint p2){
+    return (p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y);
+}
+
 int findCross(Neighbours * neigh, IntPoint *coords,int numNeigh,IntPoint * crossCoordinates);
 
 
