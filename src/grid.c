@@ -118,7 +118,7 @@ void intGridFill(IntGrid toFill,int value){
     }
 }
 
-//inline void divide(int *a,int b){
+//void divide(int *a,int b){
 //    *a=b?*a/b:*a;
 //}
 
@@ -211,7 +211,7 @@ void intGridFree(IntGrid * g){
 
 
 
-inline int mulby2(int val){
+int mulby2(int val){
     return val<<1;
 }
 void intGridTest(){

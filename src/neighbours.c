@@ -4,7 +4,7 @@
 
 #define NO_DIRECTION (-1)
 
-inline void intPointAdd(IntPoint *p,int x,int y){
+void intPointAdd(IntPoint *p,int x,int y){
     p->x+=x;
     p->y+=y;
 }
@@ -135,7 +135,7 @@ Edge * extractGoodEdges(Neighbours * neigh, IntPoint *coords,int num, int *numEd
     return edges;
 }
 
-inline int findCrossInnerLoop(int initialIdx,Neighbours *neigh){
+int findCrossInnerLoop(int initialIdx,Neighbours *neigh){
     int i,j,secondGenCandidate,k=-1;
     int * firstGen=neigh[initialIdx].neigbourIdx;
     int * secondGenPointer;

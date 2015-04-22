@@ -9,6 +9,10 @@
 #  define CELLULO_LOCALIZATIONSHARED_EXPORT Q_DECL_IMPORT
 #endif
 
+#ifdef __cplusplus
+extern "C"{
+#endif 
+
 struct _PositionInfo;
 typedef struct _PositionInfo PositionInfo;
 ///
@@ -26,6 +30,8 @@ float getCertaintyAngle(PositionInfo *info);
 
 void release(PositionInfo **info);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CELLULO_LOCALIZATION_GLOBAL_H

@@ -1,6 +1,4 @@
-#include "mainwindow.h"
 #include "camera.h"
-#include <QApplication>
 #include <iostream>
 #include <vector>
 
