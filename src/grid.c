@@ -334,7 +334,7 @@ int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntP
         return 0;
     IntGrid indiceGrid=intGridCreate(maxGridX-minGridX+1,maxGridY-minGridY+1);
     intGridFill(indiceGrid,NOPOINT);
-                for(i=0;i<n;++i){
+    for(i=0;i<n;++i){
         indiceGrid.array[gridCoordinate[i].y-minGridY][gridCoordinate[i].x-minGridX]=i;
     }
     int * accumulator=(int *) malloc(n*sizeof(int));

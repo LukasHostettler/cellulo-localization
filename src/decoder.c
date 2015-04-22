@@ -5,6 +5,7 @@ extern "C"
 #include <stdlib.h>
 #include "limits.h"
 #include "decoder.h"
+#include <stdio.h>
 
 
 
@@ -311,7 +312,7 @@ IntPoint decodePos(ProbabilityGrids probGrids,int startRow,int startCol){
 
 }
 
-#define ROTATION_DECODER_AWR (30)
+#define ROTATION_DECODER_AWR (3)
 void rotationDecoderReset(RotationDecoder * rot){
     rot->x=0;
     rot->y=0;
@@ -335,9 +336,16 @@ void rotationDecoderUpdate(RotationDecoder * rot, int rotProb1, int rotProb2){
 }
 int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
     int rotated=0;
+    int determinant=means[1].x*means[0].y-means[1].y*means[0].x;
+
+    printf("%d",determinant>0);
     if(rot->x<0 && rot->y<0){ //complete opposite
+
         intPointMul(means+0,-1);
         intPointMul(means+1,-1);
+        IntPoint tmpMeans=means[0];
+        means[0]=means[1];
+        means[1]=tmpMeans;
         rot->x*=-1;
         rot->y*=-1;
         rotated=1;
@@ -353,7 +361,7 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
 
         //rot->x*=-1;
         //int tmp=rot->x*-1;
-        rot->x=rot->y;
+        rot->x=0;//rot->y;
         rot->y=0;//tmp;
         rotated=1;
     }
@@ -361,17 +369,18 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
         //swap
         IntPoint tmpMeans=means[1];
         intPointMul(&tmpMeans,-1);
-        intPointMul(means+0,-1);
+        //intPointMul(means+0,-1);
         means[1]=means[0];
 
         means[0]=tmpMeans;
 
 //        rot->y*=-1;
         //int tmp=rot->y*-1;
-        rot->y=rot->x;
+        rot->y=0;//rot->x;
         rot->x=0;
         rotated=1;
     }
+
     return rotated;
 
 }

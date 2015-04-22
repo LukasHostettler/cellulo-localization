@@ -34,8 +34,31 @@ Camera::~Camera()
     delete means;
 }
 
-void drawRobot(IntPoint upLeft,IntPoint downRight){
-    Mat I(downRight.x-upLeft.x,downRight.y-upLeft.y, CV_8UC1,Scalar(255));
+void Camera::drawRobot(int width, int height,int radius){
+    Scalar backGround(255,255,255);
+    switch(actualRobotPosition.y/1000){
+    case 2:
+        backGround=Scalar(140,140,255);//r
+        break;
+    case 3:
+        backGround=Scalar(140,255,255);
+
+        break;
+    case 4:
+        backGround=Scalar(140,255,140);
+        break;
+    //default:
+    }
+
+    Mat I(height,width, CV_8UC3,backGround);
+    Scalar black(0,0,0);
+
+    if(actualRobotPosition.x>=0 &&actualRobotPosition.y>=0){
+        Point pos(actualRobotPosition.x%1000,actualRobotPosition.y%1000);
+        Point dir(means->y/80,means->x/80);
+        circle(I,pos,radius,black);
+        line(I,pos,pos+dir,black);
+    }
     imshow("Robot on sheet",I);
 
 
@@ -173,9 +196,8 @@ void printSquare(Mat &I,int row, int col, IntPoint * means,IntPoint origin, int 
 }
 
 bool Camera::segment(Mat &I, double thresholdValue){
-    IntPoint upLeft={0,300};
-    IntPoint downRight={1000,1600};
-    drawRobot(upLeft,downRight);
+
+    drawRobot();
     //intGridTest();
     int i,subdivision=128;
     int chan=1;
@@ -185,7 +207,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
 
     if(thresholdValue==-1){
         Scalar imgMean=mean(channels[chan]);
-        thresholdValue=imgMean(0)-10;
+        thresholdValue=imgMean(0)-20;
     }
 
     imgSegList segList=segmentImage(channels[chan].ptr(),channels[chan].rows,channels[chan].cols,thresholdValue);
@@ -247,7 +269,12 @@ bool Camera::segment(Mat &I, double thresholdValue){
             if(!rotationDecoderUpdateMeans(&rotDec,means)){
                 IntPoint pos=decodePos(probGrids,nRow,nCol);
                 cout<<"x: "<<pos.x-nRow<<" y: "<<pos.y-nCol<<endl;
-
+                if(pos.x>=0)
+                    actualRobotPosition.x=pos.x-nRow;//subdivision;
+                if(pos.y>=0)
+                    actualRobotPosition.y=pos.y-nCol;//subdivision;
+                actualRobotHeadPosition.x=actualRobotPosition.x+means[0].x/subdivision;
+                actualRobotHeadPosition.y=actualRobotPosition.y+means[0].y/subdivision;
 
 
             }
@@ -263,6 +290,8 @@ bool Camera::segment(Mat &I, double thresholdValue){
     }
     else{
             cout<<"above ground"<<endl;
+            actualRobotPosition.x=-1000;
+            actualRobotPosition.y=-1000;
             rotationDecoderDiminuish(&rotDec);
     }
 

@@ -30,11 +30,12 @@ public:
     bool getThresholded(Mat &frame, double thresholdValue=128);
 
     bool segment(Mat &I, double thresholdValue=-1);
-
+    void drawRobot(int width=310, int height=440,int radius=42);
 
 private:
     IntPoint actualRobotPosition;
-    IntPoint actualRobotOrientation;
+    IntPoint actualRobotHeadPosition;
+
     cv::VideoCapture cap;
     IntPoint *means;
     RotationDecoder rotDec;
