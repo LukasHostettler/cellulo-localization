@@ -23,7 +23,7 @@ Camera::Camera(int camNo)
     double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     cout << "Frame size : " << dWidth << " x " << dHeight << endl;
-    means=new IntPoint[4];
+    means=new IntPoint[4]; //TO BE CHANGED
     initMeans(means,100);
     rotationDecoderReset(&rotDec);
 }
@@ -33,6 +33,15 @@ Camera::~Camera()
     cap.release();
     delete means;
 }
+
+void drawRobot(IntPoint upLeft,IntPoint downRight){
+    Mat I(downRight.x-upLeft.x,downRight.y-upLeft.y, CV_8UC1,Scalar(255));
+    imshow("Robot on sheet",I);
+
+
+
+}
+
 bool Camera::getRawFrame(Mat &frame){
     bool ans=false;
     if(cap.isOpened()){
@@ -164,7 +173,9 @@ void printSquare(Mat &I,int row, int col, IntPoint * means,IntPoint origin, int 
 }
 
 bool Camera::segment(Mat &I, double thresholdValue){
-
+    IntPoint upLeft={0,300};
+    IntPoint downRight={1000,1600};
+    drawRobot(upLeft,downRight);
     //intGridTest();
     int i,subdivision=128;
     int chan=1;

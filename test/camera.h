@@ -3,7 +3,7 @@
 #include <opencv2/opencv.hpp>
 
 
-#include <cellulo_localization_global.h>
+#include <cellulo_localization.h>
 
 #include "../src/list.h"
 #include "../src/imgsegment.h"
@@ -32,8 +32,9 @@ public:
     bool segment(Mat &I, double thresholdValue=-1);
 
 
-
 private:
+    IntPoint actualRobotPosition;
+    IntPoint actualRobotOrientation;
     cv::VideoCapture cap;
     IntPoint *means;
     RotationDecoder rotDec;

@@ -6,3 +6,4 @@ This will include:
  - cellulo_pattern_generator A library capable of generating patterns and adding them on top of PDFS
  - A test-program working with OpenCV to debug cellulo_localization
  - A MPLAB-X program in order to programm the Cellulo-Robot
+ - the camera driver
