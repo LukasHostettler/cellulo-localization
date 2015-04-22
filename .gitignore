@@ -1,0 +1,12 @@
+#MPLABX
+build/
+debug/
+dist/
+/**/nbproject/Makefile-*
+/**/nbproject/Package-*
+/**/nbproject/private/
+
+#Qt
+*.user
+build*/
+
