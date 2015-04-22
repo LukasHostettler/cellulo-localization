@@ -16,7 +16,6 @@ LIBS += `pkg-config opencv --libs`\
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
     ../src/imgsegment.c \
     camera.cpp \
     ../src/list_impl.c \
@@ -26,7 +25,7 @@ SOURCES += main.cpp\
     ../src/grid.c \
     ../src/decoder.c
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
     ../include/cellulo_localization.h\
     ../src/imgsegment.h \
     camera.h \

@@ -19,11 +19,13 @@ typedef struct{
 
 
 
-IntGrid intGridCreateEmpty(){
+IntGrid intGridCreateEmpty()
+{
     IntGrid ans={0,0,0,0};
     return ans;
 }
-IntGrid intGridCreate(int numCol, int numRow){
+IntGrid intGridCreate(int numCol, int numRow)
+{
     int i;
     IntGrid ans=intGridCreateEmpty();
     if(numCol>0 && numRow >0){
@@ -42,7 +44,8 @@ IntGrid intGridCreate(int numCol, int numRow){
 
 
 
-IntGrid intGridCopy(IntGrid other){
+IntGrid intGridCopy(IntGrid other)
+{
     int i;
     IntGrid ans=intGridCreate(other.numCols,other.numRows);
     for(i=0;i<other.numCols*other.numRows;++i){ //could use memcopy...
@@ -50,7 +53,8 @@ IntGrid intGridCopy(IntGrid other){
     }
     return ans;
 }
-int intGridAddTo(IntGrid a,IntGrid b){
+int intGridAddTo(IntGrid a,IntGrid b)
+{
     int i;
     //check same dimensions
     int condition=a.numCols==b.numCols && a.numRows==b.numRows &&a.numCols>0 &&a.numRows>0;
@@ -63,7 +67,8 @@ int intGridAddTo(IntGrid a,IntGrid b){
     return 0;
 }
 
-IntGrid intGridAdd(IntGrid a,IntGrid b){
+IntGrid intGridAdd(IntGrid a,IntGrid b)
+{
     int i;
     //check same dimensions
     int condition=a.numCols==b.numCols && a.numRows==b.numRows &&a.numCols>0 &&a.numRows>0;
@@ -78,7 +83,8 @@ IntGrid intGridAdd(IntGrid a,IntGrid b){
         return intGridCreateEmpty();
     }
 }
-IntGrid intGridMax(IntGrid a,IntGrid b){
+IntGrid intGridMax(IntGrid a,IntGrid b)
+{
     int i,condition=a.numCols==b.numCols && a.numRows==b.numRows &&a.numCols>0 &&a.numRows>0;
     if(condition){
         IntGrid ans=intGridCreate(a.numCols,a.numRows);
@@ -89,14 +95,16 @@ IntGrid intGridMax(IntGrid a,IntGrid b){
     }
     return intGridCreateEmpty();
 }
-void intGridApplyToEveryElement(IntGrid g,int(*f)(int)){
+void intGridApplyToEveryElement(IntGrid g,int(*f)(int))
+{
     int i;
     for(i=0;i<g.numCols*g.numRows;++i){
         g.data[i]=(*f)(g.data[i]);
     }
 }
 
-IntGrid intGridCopySub(IntGrid other,int topRow, int leftCol,int numRows, int numCols){
+IntGrid intGridCopySub(IntGrid other,int topRow, int leftCol,int numRows, int numCols)
+{
     int j;
     int *dataPtrIn,*dataPtrOut;
     assert(numCols>0&&numCols>0);
@@ -122,12 +130,14 @@ void intGridFill(IntGrid toFill,int value){
 //    *a=b?*a/b:*a;
 //}
 
-void intGridOperation(IntGrid toModify,IntGrid modifier,void (*func)(int *,int)){
+void intGridOperation(IntGrid toModify,IntGrid modifier,void (*func)(int *,int))
+{
     int i;
     for(i=0;i<toModify.numCols*toModify.numRows;++i)
         (*func)(toModify.data+i,modifier.data[i]);
 }
-IntGrid intGridLocalSum(IntGrid g,int windowSize){
+IntGrid intGridLocalSum(IntGrid g,int windowSize)
+{
     int i,j,accumulator;
     int * dataPtrIn, *dataPtrOut;
     IntGrid tmp,ans;
@@ -162,7 +172,8 @@ IntGrid intGridLocalSum(IntGrid g,int windowSize){
 
 }
 //returns the index of maximum.
-int intGridMaximum(IntGrid g,int *idx){
+int intGridMaximum(IntGrid g,int *idx)
+{
     int max=INT_MIN;
     int maxIdx=0,i;
     for(i=0;i<g.numCols*g.numRows;i++){
@@ -186,7 +197,8 @@ void intGridIndToSub(int ind, int * numCol,int * numRow){
 
     }
 }
-void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n){
+void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n)
+{
     int maxIdx;
     //handle too small base grids
     assert(nCol&&nRow&& grid.numCols>=n && grid.numRows>=n);
@@ -200,7 +212,8 @@ void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n){
     intGridFree(&tmp);
 }
 
-void intGridFree(IntGrid * g){
+void intGridFree(IntGrid * g)
+{
     free(g->array);
     g->array=0;
     free(g->data);
@@ -211,7 +224,8 @@ void intGridFree(IntGrid * g){
 
 
 
-inline int mulby2(int val){
+inline int mulby2(int val)
+{
     return val<<1;
 }
 void intGridTest(){
@@ -237,7 +251,8 @@ void intGridTest(){
 }
 
 
-int itterateSpiral(IntGrid g, int * x, int * y){
+int itterateSpiral(IntGrid g, int * x, int * y)
+{
     int xdir=0;
     int ydir=1;
     int tmp;
@@ -284,7 +299,8 @@ void testSpiral(){
 //! Given estimated means this function corrects their length
 //! it also provides the point of origin close to the center of points and alligned with the grid
 //! PointArray is the underlying PointCoordinates, n is the number of points
-int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntPoint * origin){
+int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntPoint * origin)
+{
     //swap vectors if order is bad
     if(means[0].x*means[1].y-means[0].y*means[1].x<0){
         IntPoint tmp=means[1];
@@ -387,7 +403,8 @@ int correctMeanLength(IntPoint * pointArray,IntPoint *means,int power,int n,IntP
     free(gridCoordinate);
     return 1;
 }
-IntPoint medianCorrectOffsets(DotInformation d){
+IntPoint medianCorrectOffsets(DotInformation d)
+{
     IntPoint median;
     intList tmp,cpy;
     int i;
@@ -412,7 +429,8 @@ IntPoint medianCorrectOffsets(DotInformation d){
 }
 
 
-DotInformation dotInfoCreateEmpty(){
+DotInformation dotInfoCreateEmpty()
+{
     DotInformation ans;
     ans.numElements=0;
     ans.gridMaxCols=0;
