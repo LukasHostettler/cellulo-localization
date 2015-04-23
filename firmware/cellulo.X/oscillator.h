@@ -10,7 +10,7 @@
 #define	OSCILLATOR_H
 
 #ifdef __XC32
-    #include <xc.h>          /* Defines special funciton registers, CP0 regs  */
+    #include <xc.h>
 #endif
 
 #define SYSCLK       200000000L

@@ -13,4 +13,6 @@ void setupOscillator(){
     //All necessary values are copied from configuration bits at power on
 
     while(OSCCONbits.SLOCK == 0);   //Wait until PLL locks
+
+    //TODO: IMG_CLK output is reference clock output
 }
