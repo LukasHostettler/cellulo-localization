@@ -37,28 +37,49 @@ Camera::~Camera()
 
 void Camera::drawRobot(int width, int height,int radius){
     static Scalar backGround(255,255,255);
+    bool showNumber=false;
+    int number;
+    IntPoint knobPos[3]={{58,6400},{151,6400},{233,6400}};
+    IntPoint numberPad[]={{148,7391},{34,7137},{132,7130},{233,7131},{34,7209},{132,7209},{233,7209},{38,7298},{126,7295},{218,7289}};
 
     switch(actualRobotPosition.y/1000){
     case 1:
         backGround=Scalar(255,255,255);//w
+        break;
     case 2:
         backGround=Scalar(140,140,255);//r
         break;
-    case 5:
+    case 3:
         backGround=Scalar(140,255,255);//y
 
         break;
     case 4:
         backGround=Scalar(140,255,140);//g
-    case 3:
-        IntPoint knobPos[3]={{50,3400},{155,3400},{266,3400}};
+        break;
+    case 5:
+        backGround=Scalar(255,140,140);//b
+        break;
+    case 6:
+
         for(int i=0;i<3;i++)
         if(intPointSquareDist(knobPos[i],actualRobotPosition)<30*30){
             backGround.val[i]=255*(atan2(means->x,means->y)+M_PI)/(2*M_PI);
+            backGround.val[(i+1)%3]=backGround.val[i]/2;
+            backGround.val[(i+2)%3]=backGround.val[i]/2;
+
         }
 
         break;
-    //default:
+    case 7:
+        for(int i=0;i<10;i++){
+            if(intPointSquareDist(numberPad[i],actualRobotPosition)<30*30){
+                showNumber=true;
+                number=i;
+            }
+
+        }
+        break;
+        //default:
     }
 
     Mat I(height,width, CV_8UC3,backGround);
@@ -69,6 +90,13 @@ void Camera::drawRobot(int width, int height,int radius){
         Point dir(means->y/80,means->x/80);
         circle(I,pos,radius,black);
         line(I,pos,pos+dir,black);
+        if(showNumber){
+            string text[]={"0","1","2","3","4","5","6","7","8","9"};
+            int fontFace = CV_FONT_HERSHEY_PLAIN;
+            double fontScale = 3;
+            putText(I,text[number],Point(100,100),fontFace,fontScale,Scalar(0,0,0));
+        }
+
     }
     imshow("Robot on sheet",I);
 
