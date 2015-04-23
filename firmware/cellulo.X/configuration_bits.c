@@ -1,6 +1,10 @@
-/******************************************************************************/
-/* Files to Include                                                           */
-/******************************************************************************/
+/**
+ * @file configuration_bits.c
+ * @brief Device configuration bits that are set during programming
+ * @author Ayberk Özgür
+ * @version 1.0
+ * @date 2015-04-22
+ */
 
 #ifdef __XC32
     #include <xc.h>          /* Defines special funciton registers, CP0 regs  */
