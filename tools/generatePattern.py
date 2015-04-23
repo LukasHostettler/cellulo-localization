@@ -22,6 +22,7 @@
 #     along with the Free Dot Toolkit; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import argparse
 dot_seq=[0,0,0,0,0,0,1,0,0,1,1,1,1,1,0,1,0,0,1,0,0,0,0,1,1,1,0,1,1,1,0,0,1,0,1,0,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,0,1,0,1,1,1,1,0,0,0,1,1]
 #dot_seq = [0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0]
 dot_val = [[0,3],[1,2]]#x,y
@@ -290,7 +291,7 @@ def calculateDeltaFromPos(pos):
 	return ans
 
 
-def testPS(width=0.5,x0=0,y0=1000,offset=0.12):
+def testPS(debug=1,width=0.5,x0=0,y0=1000,offset=0.12,page_width=0,page_height=0):
     num_hor=int(190/width)
     num_ver=int(270/width)
     delta=generateDelta(startx=x0,length=num_hor)
@@ -299,13 +300,13 @@ def testPS(width=0.5,x0=0,y0=1000,offset=0.12):
     seq_left=generatePrimaryOffset(delta);
     #print(seq_left)
     e = anotoEdge(seq_left, seq_top)
-    info="spacing:"+str(width)+" mm, x0="+str(x0)+",y0="+str(y0) +",offset="+str(offset)
+    info=""
+    if debug:
+    	info="spacing:"+str(width)+" mm, x0="+str(x0)+",y0="+str(y0) +",offset="+str(offset)
     e.genPage(name="a4page1.ps", title=info,width=width,offset=offset)
     #e = anotoEdge(savenotes_left, savenotes_top)
     #e.genPage(name="a4savenotes.ps", title="a4 Save Notes",width=1)
     
-def testPS2(*args):
-	parseargs(args)
 def comp():
     chd = delta(e_horiz)
     bhd = delta(d_horiz)
@@ -342,8 +343,18 @@ def comp():
 #chd = e_vert, bhd = d_vert, 0 got it at 180, delta 9, chd[15:25]
 #chd = e_horiz, bhd=d_horiz, 0 got it at 12, delta 15, chd[15:25]
 if __name__=='__main__':
-	#testPS2(*args)
-    testPS(width=0.6,offset=0.145,y0=7000)
+	parser = argparse.ArgumentParser(description='Generates the patterns used for the cellulo-project')
+	parser.add_argument("-g","--gridspacing",default=0.6,type=float,help='The spacing between the dots in mm')
+	parser.add_argument("-x","--x-left",default=0,type=int,help='x coordinate of the left side')
+	parser.add_argument("-y","--y-top",default=0,type=int,help='y coordinate of the top')
+	#group = parser.add_mutually_exclusive_group() 
+	#group.add_argument("-f","--paper-format",default='A4', type=str,choices=['A0','A1','A2','A3','A4','A5'],help='format of the paper')
+	#group.add_argument("-c","--custom-format",nargs=2,metavar=("WIDTH", "HEIGHT"),type=float,help='custom format WIDTH HEIGH in mm')
+	parser.add_argument("-o","--dot-offset",default=0.145, type=float,help='ratio between the dot offset and the gridspacing')
+	#parser.add_argument("-s","--dot-size", default=1.0, type=float,help='ratio between radius of the dot and the gridspacing')
+	parser.add_argument("-d","--debug", action='store_true',help='prints the infomation needed for generation on pattern')
+	args=parser.parse_args();
+	testPS(width=args.gridspacing,offset=args.dot_offset,y0=args.y_top,x0=args.x_left,debug=args.debug)
 #    comp()
 #    testMod()
 #    print comp()[440:470]
