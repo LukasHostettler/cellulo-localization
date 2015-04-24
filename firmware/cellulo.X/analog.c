@@ -9,5 +9,11 @@
 #include"analog.h"
 
 void setupAnalog(){
-    
+
+    //VBAT_SENSE
+    TRISBbits.TRISB11 = 1;  //Set as input
+    ANSELBbits.ANSB11 = 1;  //Analog functionality
+
+    //TODO: SETUP ADC
+
 }

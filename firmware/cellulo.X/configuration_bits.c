@@ -24,7 +24,7 @@
 #pragma config FPLLRNG = RANGE_5_10_MHZ // System PLL Input Range (5-10 MHz Input)
 #pragma config FPLLICLK = PLL_FRC       // System PLL Input Clock Selection (FRC is input to the System PLL)
 #pragma config FPLLMULT = MUL_50        // System PLL Multiplier (PLL Multiply by 50)
-// FPLLODIV = No Setting
+#pragma config FPLLODIV = DIV_2         // System PLL Output Divider (2x Divider)
 #pragma config UPLLFSEL = FREQ_24MHZ    // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
 #pragma config UPLLEN = OFF             // USB PLL Enable (USB PLL is disabled)
 
