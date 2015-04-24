@@ -24,7 +24,7 @@ Camera::Camera(int camNo)
     double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
     double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     cout << "Frame size : " << dWidth << " x " << dHeight << endl;
-    means=new IntPoint[4]; //TO BE CHANGED
+    means=new IntPoint[2]; //TO BE CHANGED
     initMeans(means,100);
     rotationDecoderReset(&rotDec);
 }

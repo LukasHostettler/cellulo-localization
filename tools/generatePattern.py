@@ -348,6 +348,7 @@ if __name__=='__main__':
 	parser.add_argument("-x","--x-left",default=0,type=int,help='x coordinate of the left side')
 	parser.add_argument("-y","--y-top",default=0,type=int,help='y coordinate of the top')
 	#group = parser.add_mutually_exclusive_group() 
+	#group = parser.add_mutually_exclusive_group(); 
 	#group.add_argument("-f","--paper-format",default='A4', type=str,choices=['A0','A1','A2','A3','A4','A5'],help='format of the paper')
 	#group.add_argument("-c","--custom-format",nargs=2,metavar=("WIDTH", "HEIGHT"),type=float,help='custom format WIDTH HEIGH in mm')
 	parser.add_argument("-o","--dot-offset",default=0.145, type=float,help='ratio between the dot offset and the gridspacing')

@@ -312,7 +312,7 @@ IntPoint decodePos(ProbabilityGrids probGrids,int startRow,int startCol){
 
 }
 
-#define ROTATION_DECODER_AWR (3)
+#define ROTATION_DECODER_AWR (8)
 void rotationDecoderReset(RotationDecoder * rot){
     rot->x=0;
     rot->y=0;
@@ -335,6 +335,7 @@ void rotationDecoderUpdate(RotationDecoder * rot, int rotProb1, int rotProb2){
         rot->y=-ROTATION_DECODER_AWR;
 }
 int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
+    int i;
     int rotated=0;
     int determinant=means[1].x*means[0].y-means[1].y*means[0].x;
 
@@ -348,16 +349,15 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
         means[1]=tmpMeans;
         rot->x*=-1;
         rot->y*=-1;
-        rotated=1;
+        rotated=2;
     }
     else if(rot->x<0 && rot->y>0){
-        IntPoint tmpMeans=means[0];
-        intPointMul(&tmpMeans,-1);
-        //intPointMul(means+1,-1);
-        means[0]=means[1];
-
-
-        means[1]=tmpMeans;
+        IntPoint tmpMeans;
+        for(i=0;i<2;i++){
+            tmpMeans=means[i];
+            means[i].x=-tmpMeans.y;
+            means[i].y=tmpMeans.x;
+        }
 
         //rot->x*=-1;
         //int tmp=rot->x*-1;
@@ -366,19 +366,15 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
         rotated=1;
     }
     else if(rot->y<0 && rot->x>0){
-        //swap
-        IntPoint tmpMeans=means[1];
-        intPointMul(&tmpMeans,-1);
-        //intPointMul(means+0,-1);
-        means[1]=means[0];
-
-        means[0]=tmpMeans;
-
-//        rot->y*=-1;
-        //int tmp=rot->y*-1;
+        IntPoint tmpMeans;
+        for(i=0;i<2;i++){
+            tmpMeans=means[i];
+            means[i].x=tmpMeans.y;
+            means[i].y=-tmpMeans.x;
+        }
         rot->y=0;//rot->x;
         rot->x=0;
-        rotated=1;
+        rotated=-1;
     }
 
     return rotated;

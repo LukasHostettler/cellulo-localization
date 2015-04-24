@@ -194,10 +194,10 @@ void initMeans(IntPoint *means, int r){
     means[0].y=0;
     means[1].x=0;
     means[1].y=r;
-    for(i=2;i<4;++i){
-        means[i].x=-means[i-2].x;
-        means[i].y=-means[i-2].y;
-    }
+//    for(i=2;i<4;++i){
+//        means[i].x=-means[i-2].x;
+//        means[i].y=-means[i-2].y;
+//    }
 }
 
 
@@ -254,8 +254,13 @@ void medianMeans(Edge *edges,IntPoint *means,int num){
     //sort edges into acumulators
     for(e=edges;e<edges+num;++e){
         dir=e->direction;
-        dx=e->dx-means[dir].x;
-        dy=e->dy-means[dir].y;
+        if(dir<2){
+            dx=e->dx-means[dir].x;
+            dy=e->dy-means[dir].y;
+        }else{
+            dx=e->dx +  means[dir-2].x;
+            dy=e->dy + means[dir-2].y;
+        }
         if((dx*dx+dy*dy)<0.25*squareLength[dir]){ //TODO: parameter to be determined
             intListPush(accumulators+(dir&1),(1-(dir&2))*e->dx);
             intListPush(accumulators+(dir&1)+2,(1-(dir&2))*e->dy);
@@ -265,8 +270,6 @@ void medianMeans(Edge *edges,IntPoint *means,int num){
         //TODO assure that non-zero...
         means[i].x=intListMedian(accumulators[i]);
         means[i].y=intListMedian(accumulators[i+2]);
-        means[i+2].x=-means[i].x;
-        means[i+2].y=-means[i].y;
     }
 
 
@@ -281,6 +284,12 @@ void linkedKMeans(Edge * edges,IntPoint *oldMean,int num){
     int i,j,itt,minIdx,maxNumItt=10;
     int minSqdist,tmpSqdist,dx,dy;
     int hasChanged=1; //in order to go through loop.
+    IntPoint oldMeanExtended[4];
+    for(i=0;i<2;i++){
+        oldMeanExtended[i]=oldMean[i];
+        oldMeanExtended[i+2]=oldMean[i];
+        intPointMul(oldMeanExtended+i+2,-1);
+    }
     IntPoint mean[4],tmpMean;
     int pointCounter[4];
 
@@ -294,13 +303,13 @@ void linkedKMeans(Edge * edges,IntPoint *oldMean,int num){
         for(i=0;i<num;++i){//for all vectors
             //classify point
             minIdx=0;
-            dx=edges[i].dx-oldMean[0].x;
-            dy=edges[i].dy-oldMean[0].y;
+            dx=edges[i].dx-oldMeanExtended[0].x;
+            dy=edges[i].dy-oldMeanExtended[0].y;
             minSqdist=dx*dx+dy*dy;
             for(j=1;j<4;++j)//for all clusters
             {
-                dx=edges[i].dx-oldMean[j].x;
-                dy=edges[i].dy-oldMean[j].y;
+                dx=edges[i].dx-oldMeanExtended[j].x;
+                dy=edges[i].dy-oldMeanExtended[j].y;
                 tmpSqdist=dx*dx+dy*dy;
                 if(tmpSqdist<minSqdist){
                     minIdx=j;
@@ -339,12 +348,12 @@ void linkedKMeans(Edge * edges,IntPoint *oldMean,int num){
             }
             if(tmpMean.x!=oldMean[j].x || tmpMean.y!=oldMean[j].y)
                 hasChanged=1;
-            oldMean[j]=tmpMean;
-            oldMean[j+2].x=-tmpMean.x;
-            oldMean[j+2].y=-tmpMean.y;
+            oldMeanExtended[j]=tmpMean;
         }
 
     }
-    medianMeans(edges,oldMean,num);
+    medianMeans(edges,oldMeanExtended,num);
+    oldMean[0]=oldMeanExtended[0];
+    oldMean[1]=oldMeanExtended[1];
 }
 
