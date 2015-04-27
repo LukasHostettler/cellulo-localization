@@ -13,12 +13,23 @@ PositionInfo * positionInfoInit(){
     ans->decoded=0;
     return ans;
 }
+unsigned char imageMean(unsigned char *image,int rows, int cols){
+    int i;
+    long buffer=0;
+    long numpixel=rows*cols;
+    for(i=0;i<numpixel;++i){
+        buffer+=image[i];
+    }
+    return buffer/numpixel;
+
+}
 
 PositionInfo * localize(PositionInfo * previousInfo,unsigned char * image, int rows, int cols){
     if(!previousInfo)
         previousInfo=positionInfoInit();
+    previousInfo->decoded=0;
     int i, subdivision=128;
-    int thresholdValue=100;//NEEDS CHANGE...
+    int thresholdValue=imageMean(image,rows,cols);
     imgSegList segList=segmentImage(image,rows,cols,thresholdValue);
     if(segList.numElements<6)
         return previousInfo;
@@ -55,6 +66,7 @@ PositionInfo * localize(PositionInfo * previousInfo,unsigned char * image, int r
                 IntPoint pos=decodePos(probGrids,nRow,nCol);
                 previousInfo->position.x=pos.x-nRow;
                 previousInfo->position.y=pos.y-nCol;
+                previousInfo->decoded=1;
             }
         }
         dotInfoFree(&dotInfo);
@@ -116,6 +128,12 @@ float getCertaintyAngle(PositionInfo *info){
     return 0;
 }
 
+int isDecoded(PositionInfo *info)
+{
+    if(info)
+        return info->decoded;
+    return 0;
+}
 
 
 
