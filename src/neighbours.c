@@ -47,9 +47,9 @@ Neighbours * establishNeighbourhood(IntPoint * pointArray,int num){
     for(i=0;i<num;++i){
         //init distances to intmax;
         for(j=0;j<4;++j){
-            squareDists[j]=UINT_MAX;
+            squareDists[j]=LONG_MAX;
         }
-        maxSquareDist=UINT_MAX;
+        maxSquareDist=LONG_MAX;
 
         forward=i+1;
         backward=i-1;

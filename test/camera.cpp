@@ -3,6 +3,11 @@
 #include <math.h>
 #include "camera.h"
 
+//temporary include to visualize data.
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "../demo/stb_image.h"
+
 
 #define NOSEGMENT 0xFFF
 using namespace std;
@@ -249,6 +254,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
         thresholdValue=imgMean(0)-20;
     }
 
+
     imgSegList segList=segmentImage(channels[chan].ptr(),channels[chan].rows,channels[chan].cols,thresholdValue);
     drawPoints(I,segList);
     if(segList.numElements<6)
@@ -258,7 +264,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
     int numEdges;
     Edge * edges=extractGoodEdges(neigh,pointArray,segList.numElements,&numEdges);
 
-    //drawLines(I,pointArray,neigh,segList.numElements,subdivision);
+    drawLines(I,pointArray,neigh,segList.numElements,subdivision);
     //drawLines(I,pointArray,edges,numEdges,subdivision);
 
     //!setup next threshold

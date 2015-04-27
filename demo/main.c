@@ -2,8 +2,6 @@
 #include <cellulo_localization.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#define STB_NO_HDR
-#define STB_NO_LINEAR
 #include "stb_image.h"
 
 int main(void)
@@ -13,7 +11,7 @@ int main(void)
     int rows;
     int cols;
     int bitDepth=1;
-    char fileName[]="0-bw.bmp";
+    char fileName[]="a.bmp";
     stbi_uc * image=stbi_load(fileName,&rows,&cols,&bitDepth,bitDepth);
     PositionInfo * loc= localize(0,image,rows,cols);
     for(i=0;i<10;i++){

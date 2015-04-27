@@ -14,6 +14,8 @@ PositionInfo * positionInfoInit(){
     return ans;
 }
 unsigned char imageMean(unsigned char *image,int rows, int cols){
+    if(!image || rows<1 || cols<1)
+        return 0;
     int i;
     long buffer=0;
     long numpixel=rows*cols;
@@ -25,12 +27,14 @@ unsigned char imageMean(unsigned char *image,int rows, int cols){
 }
 
 PositionInfo * localize(PositionInfo * previousInfo,unsigned char * image, int rows, int cols){
+    if(!image || rows<1 || cols<1)
+        return 0;
     if(!previousInfo)
         previousInfo=positionInfoInit();
     previousInfo->decoded=0;
     int i, subdivision=128;
-    int thresholdValue=imageMean(image,rows,cols);
-    imgSegList segList=segmentImage(image,rows,cols,thresholdValue);
+    int thresholdValue=imageMean(image,rows,cols)-20;
+    imgSegList segList=segmentImage(image,cols,rows,thresholdValue);
     if(segList.numElements<6)
         return previousInfo;
     IntPoint * pointArray= sortPointArray(segList, subdivision);
