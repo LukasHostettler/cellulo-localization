@@ -313,13 +313,37 @@ bool Camera::segment(Mat &I, double thresholdValue){
             rotationDecoderUpdate(&rotDec,b,a);
             if(!rotationDecoderUpdateMeans(&rotDec,means)){
                 IntPoint pos=decodePos(probGrids,nRow,nCol);
-                cout<<"x: "<<pos.x-nRow<<" y: "<<pos.y-nCol<<endl;
+                cout<<"x: "<<pos.x-nRow<<" y: "<<pos.y-nCol;
                 if(pos.x>=0)
                     actualRobotPosition.x=pos.x-nRow;//subdivision;
                 if(pos.y>=0)
                     actualRobotPosition.y=pos.y-nCol;//subdivision;
                 actualRobotHeadPosition.x=actualRobotPosition.x+means[0].x/subdivision;
                 actualRobotHeadPosition.y=actualRobotPosition.y+means[0].y/subdivision;
+                long deltaX=(I.rows*subdivision/2)-dotInfo.gridOrigin.x;
+                long deltaY=(I.cols*subdivision/2)-dotInfo.gridOrigin.y;
+                int a=means[0].x;// Matrix elements of matrix
+                int b=means[1].x;// a b
+                int c=means[0].y;// c d
+                int d=means[1].y;//
+                int determinant=a*d-c*b;
+                cout<<" offset "<<100*(d*deltaX-b*deltaY)/determinant;
+                cout<<" "<<100*(-c*deltaX+a*deltaY)/determinant<<endl;
+                if(pos.x>=0){
+                    actualRobotPosition.x*=100;
+//                    actualRobotPosition.x-=(100*(d*deltaX-b*deltaY))/determinant;
+                    actualRobotPosition.x-=(100*(-c*deltaX+a*deltaY))/determinant;
+                    cout<<actualRobotPosition.x<<"   ";
+                    actualRobotPosition.x/=100;
+                }
+                if(pos.y>=0){
+                    actualRobotPosition.y*=100;
+                    actualRobotPosition.y-=(100*(d*deltaX-b*deltaY))/determinant;
+
+//                    actualRobotPosition.y-=(100*(-c*deltaX+a*deltaY))/determinant;
+                    cout<<actualRobotPosition.y<<endl;
+                    actualRobotPosition.y/=100;
+                }
 
 
             }
