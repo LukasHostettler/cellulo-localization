@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 
     //    return a.exec();
 
-    Camera cam=Camera(0);
+    Camera cam=Camera(1);
     Mat frame;
 
     while(true){

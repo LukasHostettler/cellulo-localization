@@ -382,16 +382,31 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
 }
 
 //TODO
-int match(int * seq, int seqLength, int *pattern, int patternLength, int numMax){
-    int i,j;
+int * match(int * seq, int seqLength, int *pattern, int patternLength, int numMax){
+    int i,j,k;
     int maxima[numMax];
-    int maxidx[numMax];
-    int minima=0;
-    for(int i=0; i<seqLenght;++i){
-        for(int j=0;j<patternLength;++j){
+    int maxIdx[numMax];
+    int minimumIdx=0;
+    int minimum=0;
+    int sum;
+    for( i=0; i<seqLength;++i){
+        sum=0;
+        for( j=0;j<patternLength;++j){
+            sum+=pattern[j]==seq[j];
+        }
+        if(sum>minimum){
+            maxima[minimumIdx]=sum;
+            maxIdx[minimumIdx]=i;
+            for(k=0;k<numMax;++k){
+                if(maxima[k]<minimum){
+                    minimum=maxima[k];
+                    minimumIdx=k;
+                }
+            }
 
         }
     }
+    return maxima;
 }
 
 #ifdef __cplusplus
