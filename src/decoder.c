@@ -312,7 +312,7 @@ IntPoint decodePos(ProbabilityGrids probGrids,int startRow,int startCol){
 
 }
 
-#define ROTATION_DECODER_AWR (8)
+#define ROTATION_DECODER_AWR (1)
 void rotationDecoderReset(RotationDecoder * rot){
     rot->x=0;
     rot->y=0;
@@ -355,26 +355,26 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
         IntPoint tmpMeans;
         for(i=0;i<2;i++){
             tmpMeans=means[i];
-            means[i].x=-tmpMeans.y;
-            means[i].y=tmpMeans.x;
+            means[i].x=tmpMeans.y;
+            means[i].y=-tmpMeans.x;
         }
 
         //rot->x*=-1;
         //int tmp=rot->x*-1;
         rot->x=0;//rot->y;
         rot->y=0;//tmp;
-        rotated=1;
+        rotated=3;
     }
     else if(rot->y<0 && rot->x>0){
         IntPoint tmpMeans;
         for(i=0;i<2;i++){
             tmpMeans=means[i];
-            means[i].x=tmpMeans.y;
-            means[i].y=-tmpMeans.x;
+            means[i].x=-tmpMeans.y;
+            means[i].y=tmpMeans.x;
         }
         rot->y=0;//rot->x;
         rot->x=0;
-        rotated=-1;
+        rotated=1;
     }
 
     return rotated;

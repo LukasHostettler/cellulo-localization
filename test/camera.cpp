@@ -281,8 +281,8 @@ bool Camera::segment(Mat &I, double thresholdValue){
     //IntPoint tmp_mean={means[0].x*10,means[0].y*10};
     //drawDirections(I,pointArray,segList.numElements,subdivision,tmp_mean);
 
-    //drawDirections(I,pointArray,segList.numElements,subdivision,means[0]);
-    //drawDirections(I,pointArray,segList.numElements,subdivision,means[1],255.0);
+    drawDirections(I,pointArray,segList.numElements,subdivision,means[0]);
+    drawDirections(I,pointArray,segList.numElements,subdivision,means[1],255.0);
     waitKey(10);
     if(correctMeanLength(pointArray,means,10,segList.numElements,&cross)&&segList.numElements>64){
         //copy pointArray to gridArray...
@@ -303,15 +303,30 @@ bool Camera::segment(Mat &I, double thresholdValue){
             printSquare(I,nRow,nCol,means,dotInfo.gridOrigin,subdivision);
             //find orientation:
             int a=forwardProbability(probGrids.prob1,nRow,nCol);
-            //int a0=forwardProbability(probGrids.prob2,nRow,nCol);
-            //int a1=forwardProbability2(probGrids.prob2,nRow,nCol,8,8);
-            //int a2=forwardProbability2(probGrids.prob2,0,nCol,probGrids.prob2.numRows,8);//worse than just lookup, sometimes???
-            //int a3=forwardProbability2(probGrids.prob2,nRow,0,8,probGrids.prob1.numCols);
-            //int a4=forwardProbability2(probGrids.prob2,0,0,probGrids.prob1.numRows,probGrids.prob1.numCols);//worse than lookup
             int b=downwardProbability(probGrids.prob2,nRow,nCol);
             //cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<setw( 6 )<<a<<" b: "<<setw(6 )<<b<<endl;
             rotationDecoderUpdate(&rotDec,b,a);
-            if(!rotationDecoderUpdateMeans(&rotDec,means)){
+            int rotate=rotationDecoderUpdateMeans(&rotDec,means);
+            if(1){
+                probabilityGridsTurn(&probGrids,rotate);
+                int tmp;
+                switch(rotate%4){
+                case 3:
+                    tmp=nCol;
+                    nCol=nRow;
+                    nRow=probGrids.prob1.numRows-8-tmp;
+                    break;
+                case 2:
+                    nCol=probGrids.prob1.numCols-nCol-8;
+                    nRow=probGrids.prob1.numRows-nRow-8;
+                    break;
+                case 1:
+                    tmp=nCol;
+                    nCol=probGrids.prob1.numCols-nRow-8;
+                    nRow=tmp;
+                    break;
+                }
+
                 IntPoint pos=decodePos(probGrids,nRow,nCol);
                 cout<<"x: "<<pos.x-nRow<<" y: "<<pos.y-nCol;
                 if(pos.x>=0)

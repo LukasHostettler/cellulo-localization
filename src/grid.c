@@ -549,6 +549,78 @@ ProbabilityGrids makeProbabilityGrids(DotInformation dotInfo){
 
 }
 
+void probabilityGridsTurn(ProbabilityGrids * grids, int numRightTurns){
+    numRightTurns%=4;
+    IntGrid tmpGrid;
+    switch(numRightTurns){
+    case 0:
+        return;
+    case 3:
+        tmpGrid=intGridTurn(grids->prob1,numRightTurns,-1);
+        intGridFree(&grids->prob1); //no memory leaks
+        grids->prob1=intGridTurn(grids->prob2,numRightTurns,1);
+        intGridFree(&grids->prob2);
+        grids->prob2=tmpGrid;
+        break;
+    case 2:
+        tmpGrid=intGridTurn(grids->prob1,numRightTurns,-1);
+        intGridFree(&grids->prob1);
+        grids->prob1=tmpGrid;
+        tmpGrid=intGridTurn(grids->prob2,numRightTurns,-1);
+        intGridFree(&grids->prob2);
+        grids->prob2=tmpGrid;
+        break;
+    case 1:
+        tmpGrid=intGridTurn(grids->prob1,numRightTurns,1);
+        intGridFree(&grids->prob1);
+        grids->prob1=intGridTurn(grids->prob2,numRightTurns,-1);
+        intGridFree(&grids->prob2);
+        grids->prob2=tmpGrid;
+        break;
+    }
+}
+
+IntGrid intGridTurn(IntGrid grid, int numRightTurns, int factor){
+    int i,j;
+    numRightTurns%=4;
+    IntGrid tmpGrid=intGridCreateEmpty();
+    switch(numRightTurns){
+    case 0:
+        break;
+    case 1:
+        tmpGrid=intGridCreate(grid.numRows,grid.numCols);
+        for(i=0;i<grid.numCols;++i){
+            for(j=0;j<grid.numRows;++j){
+                tmpGrid.array[i][j]=factor*grid.array[grid.numRows-1-j][i];
+            }
+        }
+
+
+
+
+        break;
+    case 2:
+        tmpGrid=intGridCreate(grid.numCols,grid.numRows);
+        for(i=0;i<grid.numRows;++i){
+            for(j=0;j<grid.numCols;++j){
+                tmpGrid.array[i][j]=factor*grid.array[grid.numRows-1-i][grid.numCols-1-j];
+            }
+        }
+        break;
+    case 3:
+        tmpGrid=intGridCreate(grid.numRows,grid.numCols);
+        for(i=0;i<grid.numCols;++i){
+            for(j=0;j<grid.numRows;++j){
+                tmpGrid.array[i][j]=factor* grid.array[j][grid.numCols-1-i];
+            }
+        }
+        break;
+
+    }
+    return tmpGrid;
+
+}
+
 void probabilityGridsFree(ProbabilityGrids * grid){
     intGridFree(&(grid->maxProb));
     intGridFree(&grid->prob1);

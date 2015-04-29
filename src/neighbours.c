@@ -189,15 +189,12 @@ int findCross(Neighbours * neigh, IntPoint *coords,int numNeigh,IntPoint * cross
 }
 
 void initMeans(IntPoint *means, int r){
-    int i;
-    means[0].x=r;
+
+    means[0].x=-r;
     means[0].y=0;
     means[1].x=0;
-    means[1].y=r;
-//    for(i=2;i<4;++i){
-//        means[i].x=-means[i-2].x;
-//        means[i].y=-means[i-2].y;
-//    }
+    means[1].y=-r;
+
 }
 
 

@@ -26,6 +26,7 @@ IntGrid intGridMax(IntGrid a,IntGrid b);//!Find Elementwise maximum. Raises erro
 void intGridApplyToEveryElement(IntGrid g,int(*f)(int)); //!Generic Function to apply functions to every Element
 IntGrid intGridLocalSum(IntGrid g,int windowSize); //! makes a convolution with a square window of size windowsize.
 void intGridFindBestNxN(IntGrid grid,int *nCol,int *nRow,int n);
+IntGrid intGridTurn(IntGrid grid, int numRightTurns,int factor);//! Turns the intGrid and keeps the underlying probabilities valid
 
 void intGridFree(IntGrid * g);//!Frees the memory of an Intgrid
 void intGridTest(); //! Test function to see wheter intGrid works.
@@ -52,7 +53,7 @@ typedef struct _ProbabilityGrids{
     IntGrid prob1;
     IntGrid prob2;
 }ProbabilityGrids;
-
+void probabilityGridsTurn(ProbabilityGrids * grids, int numRightTurns);
 ProbabilityGrids makeProbabilityGrids(DotInformation dotInfo);
 void probabilityGridsFree(ProbabilityGrids * grid);
 
