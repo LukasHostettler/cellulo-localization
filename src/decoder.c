@@ -381,6 +381,19 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
 
 }
 
+//TODO
+int match(int * seq, int seqLength, int *pattern, int patternLength, int numMax){
+    int i,j;
+    int maxima[numMax];
+    int maxidx[numMax];
+    int minima=0;
+    for(int i=0; i<seqLenght;++i){
+        for(int j=0;j<patternLength;++j){
+
+        }
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif
