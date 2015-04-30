@@ -11,13 +11,14 @@ int main(void)
     int rows;
     int cols;
     int bitDepth=1;
-    char fileName[]="a.bmp";
+    char fileName[]="c.bmp";
     stbi_uc * image=stbi_load(fileName,&rows,&cols,&bitDepth,bitDepth);
     PositionInfo * loc= localize(0,image,rows,cols);
     for(i=0;i<10;i++){
-        loc=localize(loc,image,rows,cols);
         if(isDecoded(loc))
             printf("%f %f\n",getX(loc),getY(loc));
+        loc=localize(loc,image,rows,cols);
+
     }
 
 

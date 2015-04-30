@@ -50,6 +50,36 @@ Coefficients getCoeffs(int dist){
 
 }
 
+//TODO
+//! seq pointer to sequence, padded with repetition
+//! seqLenght length of
+int match(char * seq, int seqLength, char *pattern, int patternLength, int numMax){
+    int i,j,k;
+    int maxima[numMax];
+    int maxIdx[numMax];
+    int minimumIdx=0;
+    int minimum=0;
+    int sum;
+    for( i=0; i<seqLength;++i){
+        sum=0;
+        for( j=0;j<patternLength;++j){
+            sum+=pattern[j]==seq[j];
+        }
+        if(sum>minimum){
+            maxima[minimumIdx]=sum;
+            maxIdx[minimumIdx]=i;
+            for(k=0;k<numMax;++k){
+                if(maxima[k]<minimum){
+                    minimum=maxima[k];
+                    minimumIdx=k;
+                }
+            }
+
+        }
+    }
+    return maxima[0];
+}
+
 /*CHINESE REMAINDER THEOREM (from
 http://rosettacode.org/wiki/Chinese_remainder_theorem
 */
@@ -280,6 +310,7 @@ int decodePrimaryNumber(int * primaryNumberSequence,int length){
     //lookup coefficents place in sequences;
     for(i=0;i<4;++i){
         places[i]=findSequenceOffset(cPatterns[i],cSequences[i],sequenceLength[i],length-1);
+        int  * pointer=match(cSequences[i],sequenceLength[i],cPatterns[i],length-1,1);
         if(places[i]<0){
             j=3; //DUMMYINSTRUCTION for breakpoint
         }
@@ -312,7 +343,7 @@ IntPoint decodePos(ProbabilityGrids probGrids,int startRow,int startCol){
 
 }
 
-#define ROTATION_DECODER_AWR (1)
+#define ROTATION_DECODER_AWR (15)
 void rotationDecoderReset(RotationDecoder * rot){
     rot->x=0;
     rot->y=0;
@@ -381,33 +412,7 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
 
 }
 
-//TODO
-int * match(int * seq, int seqLength, int *pattern, int patternLength, int numMax){
-    int i,j,k;
-    int maxima[numMax];
-    int maxIdx[numMax];
-    int minimumIdx=0;
-    int minimum=0;
-    int sum;
-    for( i=0; i<seqLength;++i){
-        sum=0;
-        for( j=0;j<patternLength;++j){
-            sum+=pattern[j]==seq[j];
-        }
-        if(sum>minimum){
-            maxima[minimumIdx]=sum;
-            maxIdx[minimumIdx]=i;
-            for(k=0;k<numMax;++k){
-                if(maxima[k]<minimum){
-                    minimum=maxima[k];
-                    minimumIdx=k;
-                }
-            }
 
-        }
-    }
-    return maxima;
-}
 
 #ifdef __cplusplus
 }

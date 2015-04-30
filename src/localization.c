@@ -2,11 +2,18 @@
 #include "localization.h"
 #include "stdlib.h"
 
-
+//for col-major images...
+void specialInitMeans(IntPoint * means, int val){
+    means[0].x=0;
+    means[0].y=val;
+    means[1].x=val;
+    means[1].y=0;
+}
 
 PositionInfo * positionInfoInit(){
     PositionInfo * ans=(PositionInfo *)malloc(sizeof(PositionInfo));
-    initMeans(ans->means,1000);
+    //initMeans(ans->means,1000);
+    specialInitMeans(ans->means,1000);
     rotationDecoderReset(&ans->rotDec);
     ans->positionCertainty.x=0;
     ans->positionCertainty.y=0;
@@ -66,12 +73,37 @@ PositionInfo * localize(PositionInfo * previousInfo,unsigned char * image, int r
             int b=downwardProbability(probGrids.prob2,nRow,nCol);
             //cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<setw( 6 )<<a<<" b: "<<setw(6 )<<b<<endl;
             rotationDecoderUpdate(&previousInfo->rotDec,b,a);
-            if(!rotationDecoderUpdateMeans(&previousInfo->rotDec,previousInfo->means)){
-                IntPoint pos=decodePos(probGrids,nRow,nCol);
-                previousInfo->position.x=pos.x-nRow;
-                previousInfo->position.y=pos.y-nCol;
-                previousInfo->decoded=1;
+            //            if(!rotationDecoderUpdateMeans(&previousInfo->rotDec,previousInfo->means)){
+            //                IntPoint pos=decodePos(probGrids,nRow,nCol);
+            //                previousInfo->position.x=pos.x-nRow;
+            //                previousInfo->position.y=pos.y-nCol;
+            //                previousInfo->decoded=1;
+            //            }
+
+            int rotate=rotationDecoderUpdateMeans(&(previousInfo->rotDec),(previousInfo->means));
+            probabilityGridsTurn(&probGrids,rotate);
+            int tmp;
+            switch(rotate%4){
+            case 3:
+                tmp=nCol;
+                nCol=nRow;
+                nRow=probGrids.prob1.numRows-8-tmp;
+                break;
+            case 2:
+                nCol=probGrids.prob1.numCols-nCol-8;
+                nRow=probGrids.prob1.numRows-nRow-8;
+                break;
+            case 1:
+                tmp=nCol;
+                nCol=probGrids.prob1.numCols-nRow-8;
+                nRow=tmp;
+                break;
             }
+            IntPoint pos=decodePos(probGrids,nRow,nCol);
+            previousInfo->position.x=pos.x-nRow;
+            previousInfo->position.y=pos.y-nCol;
+            previousInfo->decoded=1;
+
         }
         dotInfoFree(&dotInfo);
 
