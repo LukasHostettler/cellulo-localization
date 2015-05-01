@@ -296,7 +296,7 @@ DotInformation dotInfoInit(IntPoint * pointArray,IntPoint * means,int power,int 
     intPointAdd(&(ans.gridOrigin),(a*medianOffset.x+b*medianOffset.y)>>power,(c*medianOffset.x+d*medianOffset.y)>>power);
     return ans;
 }
-
+//fill the probabiliyGrids
 ProbabilityGrids makeProbabilityGrids(DotInformation dotInfo){
     ProbabilityGrids ans;
     IntPoint *probs= probabilities(dotInfo.xoffsets, dotInfo.yoffsets,dotInfo.numElements);
@@ -324,7 +324,7 @@ ProbabilityGrids makeProbabilityGrids(DotInformation dotInfo){
     return ans;
 
 }
-
+//turns the probability grids according to the number of turns and sets the probablities according to the lecture direction
 void probabilityGridsTurn(ProbabilityGrids * grids, int numRightTurns){
     numRightTurns%=4;
     IntGrid tmpGrid;
@@ -356,6 +356,7 @@ void probabilityGridsTurn(ProbabilityGrids * grids, int numRightTurns){
     }
 }
 
+//! returns a new intGrid which is turned numRight Turns and multyplied by factor
 IntGrid intGridTurn(IntGrid grid, int numRightTurns, int factor){
     int i,j;
     numRightTurns%=4;
