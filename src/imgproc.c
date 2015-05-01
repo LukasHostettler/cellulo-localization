@@ -85,7 +85,7 @@ imgSegList segmentImage(unsigned char * imgPointer, int nRows,int nCols,unsigned
         j=equivalences.list[i];
         if(i!=j)
             imgSegmentAdd(segments.list+j,segments.list[i]);
-        else if(segments.list[i].n>8){
+        else if(segments.list[i].n>5){
             imgSegListPush(&completeSegments,segments.list[i]);
         }
     }

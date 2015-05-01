@@ -22,8 +22,8 @@ Camera::Camera(int camNo)
         return;
     }
     //cap.set(CV_CAP_PROP_FPS,60.0); does not work for current cam
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT,240.0);
-    cap.set(CV_CAP_PROP_FRAME_WIDTH,320.0);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT,120.0);
+    cap.set(CV_CAP_PROP_FRAME_WIDTH,160.0);
     //cap.set(CV_CAP_PROP_FORMAT,CV_8UC1);
     //cap.set(CV_CAP_PROP_CONTRAST,100);
     double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
