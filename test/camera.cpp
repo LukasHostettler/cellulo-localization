@@ -346,7 +346,8 @@ bool Camera::segment(Mat &I, double thresholdValue){
                 cout<<" "<<100*(-c*deltaX+a*deltaY)/determinant<<endl;
                 if(pos.x>=0){
                     actualRobotPosition.x*=100;
-                    actualRobotPosition.x-=(10*(d*deltaX-b*deltaY))/determinant;
+                    actualRobotPosition.x-=(100*(d*deltaX-b*deltaY))/determinant;
+                    actualRobotPosition.x+=450; //to get the grid center..
                     //actualRobotPosition.x-=(100*(-c*deltaX+a*deltaY))/determinant;
                     cout<<actualRobotPosition.x<<"   ";
                     actualRobotPosition.x/=100;
@@ -354,8 +355,9 @@ bool Camera::segment(Mat &I, double thresholdValue){
                 if(pos.y>=0){
                     actualRobotPosition.y*=100;
 //                    actualRobotPosition.y-=(100*(d*deltaX-b*deltaY))/determinant;
+                    actualRobotPosition.y+=450; //to get the grid center..
 
-                    actualRobotPosition.y-=(10*(-c*deltaX+a*deltaY))/determinant;
+                    actualRobotPosition.y-=(100*(-c*deltaX+a*deltaY))/determinant;
                     cout<<actualRobotPosition.y<<endl;
                     actualRobotPosition.y/=100;
                 }
