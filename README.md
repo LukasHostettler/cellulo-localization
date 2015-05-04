@@ -1,5 +1,5 @@
-# cellulo-software
-All software related to the cellulo project.
+# cellulo-localization
+All software related to the pattern recognition of the cellulo project.
 
 This will include:
  - cellulo_localization A library capable of decoding Positions from images
