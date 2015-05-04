@@ -306,7 +306,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
             int b=downwardProbability(probGrids.prob2,nRow,nCol);
             //cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<setw( 6 )<<a<<" b: "<<setw(6 )<<b<<endl;
             rotationDecoderUpdate(&rotDec,b,a);
-            int rotate=rotationDecoderUpdateMeans(&rotDec,means);
+            int rotate=rotationDecoderUpdateMeans(&rotDec,means,&dotInfo);
             if(1){
                 probabilityGridsTurn(&probGrids,rotate);
                 int tmp;

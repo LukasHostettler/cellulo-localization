@@ -17,7 +17,7 @@ typedef IntPoint RotationDecoder;
 
 void rotationDecoderReset(RotationDecoder * rot);
 void rotationDecoderUpdate(RotationDecoder * rot, int rotProb1,int   rotProb2);
-int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means);
+int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means, DotInformation *dotInfo);
 void rotationDecoderDiminuish(RotationDecoder * rot);
 
 IntPoint decodePos(ProbabilityGrids probGrids,int startRow,int startCol);

@@ -80,7 +80,7 @@ PositionInfo * localize(PositionInfo * previousInfo,unsigned char * image, int r
             //                previousInfo->decoded=1;
             //            }
 
-            int rotate=rotationDecoderUpdateMeans(&(previousInfo->rotDec),(previousInfo->means));
+            int rotate=rotationDecoderUpdateMeans(&(previousInfo->rotDec),(previousInfo->means),&dotInfo);
             probabilityGridsTurn(&probGrids,rotate);
             int tmp;
             switch(rotate%4){

@@ -365,10 +365,11 @@ void rotationDecoderUpdate(RotationDecoder * rot, int rotProb1, int rotProb2){
     else if(rot->y< -ROTATION_DECODER_AWR)
         rot->y=-ROTATION_DECODER_AWR;
 }
-int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
+int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means,DotInformation  *dotInfo){
     int i;
     int rotated=0;
     int determinant=means[1].x*means[0].y-means[1].y*means[0].x;
+
 
     printf("%d",determinant>0);
     if(rot->x<0 && rot->y<0){ //complete opposite
@@ -380,6 +381,11 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
         means[1]=tmpMeans;
         rot->x*=-1;
         rot->y*=-1;
+
+        //move origin coordinate
+        dotInfo->gridOrigin.x+=(dotInfo->gridMaxRows-1)*means[0].x+(dotInfo->gridMaxCols-1)*means[1].x;
+        dotInfo->gridOrigin.y+=(dotInfo->gridMaxRows-1)*means[0].y+(dotInfo->gridMaxCols-1)*means[1].y;
+
         rotated=2;
     }
     else if(rot->x<0 && rot->y>0){
@@ -395,6 +401,9 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
         rot->x=0;//rot->y;
         rot->y=0;//tmp;
         rotated=3;
+        dotInfo->gridOrigin.x-=(dotInfo->gridMaxCols-1)*means[0].x;
+        dotInfo->gridOrigin.y-=(dotInfo->gridMaxCols-1)*means[0].y;
+
     }
     else if(rot->y<0 && rot->x>0){
         IntPoint tmpMeans;
@@ -403,6 +412,8 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means){
             means[i].x=-tmpMeans.y;
             means[i].y=tmpMeans.x;
         }
+        dotInfo->gridOrigin.x-=(dotInfo->gridMaxRows-1)*means[1].x;
+        dotInfo->gridOrigin.y-=(dotInfo->gridMaxRows-1)*means[1].y;
         rot->y=0;//rot->x;
         rot->x=0;
         rotated=1;
