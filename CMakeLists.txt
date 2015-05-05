@@ -18,6 +18,7 @@ install (TARGETS cellulo_localization
 
 option(WITH_TESTS                     "Build testing apps" OFF)
 option(WITH_DEMOS                     "Build demo apps" OFF)
+option(WITH_MOUSE		      "Build mouse driver" OFF)
 
 if (WITH_TESTS)
     add_subdirectory(test)
@@ -25,6 +26,10 @@ endif()
 
 if(WITH_DEMOS)
     add_subdirectory(demo)
+endif()
+
+if(WITH_MOUSE)
+	add_subdirectory(mouse)
 endif()
 
 
