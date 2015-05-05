@@ -21,6 +21,7 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means, DotInfor
 void rotationDecoderDiminuish(RotationDecoder * rot);
 
 IntPoint decodePos(ProbabilityGrids probGrids,int startRow,int startCol);
+IntPoint probGridsDecode(ProbabilityGrids * probGrids,IntPoint pictureCenter,RotationDecoder * rotDec, IntPoint * means,DotInformation *dotInfo, int divisorForResult);
 
 
 #ifdef __cplusplus

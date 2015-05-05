@@ -5,7 +5,6 @@ extern "C"
 #include <stdlib.h>
 #include "limits.h"
 #include "decoder.h"
-#include <stdio.h>
 
 
 
@@ -370,8 +369,6 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means,DotInform
     int rotated=0;
     int determinant=means[1].x*means[0].y-means[1].y*means[0].x;
 
-
-    printf("%d",determinant>0);
     if(rot->x<0 && rot->y<0){ //complete opposite
 
         intPointMul(means+0,-1);
@@ -422,7 +419,61 @@ int rotationDecoderUpdateMeans(RotationDecoder * rot, IntPoint * means,DotInform
     return rotated;
 
 }
+IntPoint probGridsDecode(ProbabilityGrids * probGrids,IntPoint pictureCenter,RotationDecoder * rotDec, IntPoint * means,DotInformation *dotInfo, int divisorForResult){
 
+    int nCol=0,nRow=0;
+    intGridFindBestNxN(probGrids->maxProb,&nCol,&nRow,8);
+
+    //printSquare(I,nRow,nCol,means,dotInfo.gridOrigin,subdivision);
+    //find orientation:
+    int fwdProb=forwardProbability(probGrids->prob1,nRow,nCol);
+    int dwdProb=downwardProbability(probGrids->prob2,nRow,nCol);
+
+    rotationDecoderUpdate(rotDec,dwdProb,fwdProb);
+
+    int rotate=rotationDecoderUpdateMeans(rotDec,means,dotInfo);
+
+        probabilityGridsTurn(probGrids,rotate);
+        int tmp;
+        switch(rotate%4){
+        case 3:
+            tmp=nCol;
+            nCol=nRow;
+            nRow=probGrids->prob1.numRows-8-tmp;
+            break;
+        case 2:
+            nCol=probGrids->prob1.numCols-nCol-8;
+            nRow=probGrids->prob1.numRows-nRow-8;
+            break;
+        case 1:
+            tmp=nCol;
+            nCol=probGrids->prob1.numCols-nRow-8;
+            nRow=tmp;
+            break;
+        }
+
+        IntPoint pos=decodePos(*probGrids,nRow,nCol);
+        if(pos.x>=0)
+            pos.x=(pos.x-nRow)*divisorForResult;//subdivision;
+        if(pos.y>=0)
+            pos.y=(pos.y-nCol)*divisorForResult;//subdivision;
+        long deltaX=pictureCenter.x-dotInfo->gridOrigin.x;
+        long deltaY=pictureCenter.y-dotInfo->gridOrigin.y;
+        int a=-means[0].x;// Matrix elements of matrix
+        int b=-means[1].x;// a b
+        int c=-means[0].y;// c d
+        int d=-means[1].y;//
+        int determinant=a*d-c*b;
+        if(pos.x>=0){
+            pos.x-=(divisorForResult*(d*deltaX-b*deltaY))/determinant;
+            pos.x+=4.5*divisorForResult; //to get the grid center..
+        }
+        if(pos.y>=0){
+            pos.y+=4.5*divisorForResult; //to get the grid center..
+            pos.y-=(divisorForResult*(-c*deltaX+a*deltaY))/determinant;
+        }
+        return pos;
+}
 
 
 #ifdef __cplusplus

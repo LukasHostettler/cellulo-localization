@@ -249,7 +249,7 @@ bool Camera::segment(Mat &I, double thresholdValue){
     vector<Mat> channels;
     split(I,channels);
 
-    if(thresholdValue==-1){
+    if(thresholdValue<0){
         Scalar imgMean=mean(channels[chan]);
         thresholdValue=imgMean(0)-20;
     }
@@ -297,75 +297,19 @@ bool Camera::segment(Mat &I, double thresholdValue){
         ProbabilityGrids probGrids=makeProbabilityGrids(dotInfo);
         printIntGrid(I,probGrids.maxProb,means,dotInfo.gridOrigin,subdivision);
         printClassification(I,probGrids,means,dotInfo.gridOrigin,subdivision);
+
         if(probGrids.maxProb.numCols>=8&&probGrids.maxProb.numRows>=8){
             int nCol=0,nRow=0;
             intGridFindBestNxN(probGrids.maxProb,&nCol,&nRow,8);
             printSquare(I,nRow,nCol,means,dotInfo.gridOrigin,subdivision);
-            //find orientation:
-            int a=forwardProbability(probGrids.prob1,nRow,nCol);
-            int b=downwardProbability(probGrids.prob2,nRow,nCol);
-            //cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<setw( 6 )<<a<<" b: "<<setw(6 )<<b<<endl;
-            rotationDecoderUpdate(&rotDec,b,a);
-            int rotate=rotationDecoderUpdateMeans(&rotDec,means,&dotInfo);
-            if(1){
-                probabilityGridsTurn(&probGrids,rotate);
-                int tmp;
-                switch(rotate%4){
-                case 3:
-                    tmp=nCol;
-                    nCol=nRow;
-                    nRow=probGrids.prob1.numRows-8-tmp;
-                    break;
-                case 2:
-                    nCol=probGrids.prob1.numCols-nCol-8;
-                    nRow=probGrids.prob1.numRows-nRow-8;
-                    break;
-                case 1:
-                    tmp=nCol;
-                    nCol=probGrids.prob1.numCols-nRow-8;
-                    nRow=tmp;
-                    break;
-                }
 
-                IntPoint pos=decodePos(probGrids,nRow,nCol);
-                cout<<"x: "<<pos.x-nRow<<" y: "<<pos.y-nCol;
-                if(pos.x>=0)
-                    actualRobotPosition.x=pos.x-nRow;//subdivision;
-                if(pos.y>=0)
-                    actualRobotPosition.y=pos.y-nCol;//subdivision;
-                actualRobotHeadPosition.x=actualRobotPosition.x+means[0].x/subdivision;
-                actualRobotHeadPosition.y=actualRobotPosition.y+means[0].y/subdivision;
-                long deltaX=(I.rows*subdivision/2)-dotInfo.gridOrigin.x;
-                long deltaY=(I.cols*subdivision/2)-dotInfo.gridOrigin.y;
-                int a=-means[0].x;// Matrix elements of matrix
-                int b=-means[1].x;// a b
-                int c=-means[0].y;// c d
-                int d=-means[1].y;//
-                int determinant=a*d-c*b;
-                cout<<" offset "<<100*(d*deltaX-b*deltaY)/determinant;
-                cout<<" "<<100*(-c*deltaX+a*deltaY)/determinant<<endl;
-                if(pos.x>=0){
-                    actualRobotPosition.x*=100;
-                    actualRobotPosition.x-=(100*(d*deltaX-b*deltaY))/determinant;
-                    actualRobotPosition.x+=450; //to get the grid center..
-                    //actualRobotPosition.x-=(100*(-c*deltaX+a*deltaY))/determinant;
-                    cout<<actualRobotPosition.x<<"   ";
-                    actualRobotPosition.x/=100;
-                }
-                if(pos.y>=0){
-                    actualRobotPosition.y*=100;
-//                    actualRobotPosition.y-=(100*(d*deltaX-b*deltaY))/determinant;
-                    actualRobotPosition.y+=450; //to get the grid center..
-
-                    actualRobotPosition.y-=(100*(-c*deltaX+a*deltaY))/determinant;
-                    cout<<actualRobotPosition.y<<endl;
-                    actualRobotPosition.y/=100;
-                }
-
-
-            }
-            else
-                cout<<"turned"<<endl;
+            IntPoint pictureCenter={(I.rows*subdivision/2),(I.cols*subdivision/2)};
+            IntPoint decodedPos=probGridsDecode(&probGrids,pictureCenter,&rotDec, means,&dotInfo,100);
+            cout<<"x:"<<decodedPos.x<<" y:"<< decodedPos.y<<endl;
+            if(decodedPos.x>=0)
+                actualRobotPosition.x=decodedPos.x/100;
+            if(decodedPos.y>=0)
+                actualRobotPosition.y=decodedPos.y/100;
         }
         dotInfoFree(&dotInfo);
         //drawLines(I,pointArray,edges,numEdges,subdivision,Scalar(0,255,255));

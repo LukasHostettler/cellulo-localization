@@ -51,7 +51,7 @@ PositionInfo * localize(PositionInfo * previousInfo,unsigned char * image, int r
 
     linkedKMeans(edges,previousInfo->means,numEdges);
     IntPoint cross=pointArray[segList.numElements/2];
-    int findCrossSuccess=findCross(neigh,pointArray,segList.numElements,&cross);
+    findCross(neigh,pointArray,segList.numElements,&cross);
 
     if(correctMeanLength(pointArray,previousInfo->means,10,segList.numElements,&cross)&&segList.numElements>64){
         //copy pointArray to gridArray...
@@ -66,43 +66,17 @@ PositionInfo * localize(PositionInfo * previousInfo,unsigned char * image, int r
         ProbabilityGrids probGrids=makeProbabilityGrids(dotInfo);
 
         if(probGrids.maxProb.numCols>=8&&probGrids.maxProb.numRows>=8){
-            int nCol=0,nRow=0;
-            intGridFindBestNxN(probGrids.maxProb,&nCol,&nRow,8);
-            //find orientation:
-            int a=forwardProbability(probGrids.prob1,nRow,nCol);
-            int b=downwardProbability(probGrids.prob2,nRow,nCol);
-            //cout<<"Results: a>0:"<< int(a>0) <<" b>0: "<<int(b>0)<<" a: "<<setw( 6 )<<a<<" b: "<<setw(6 )<<b<<endl;
-            rotationDecoderUpdate(&previousInfo->rotDec,b,a);
-            //            if(!rotationDecoderUpdateMeans(&previousInfo->rotDec,previousInfo->means)){
-            //                IntPoint pos=decodePos(probGrids,nRow,nCol);
-            //                previousInfo->position.x=pos.x-nRow;
-            //                previousInfo->position.y=pos.y-nCol;
-            //                previousInfo->decoded=1;
-            //            }
 
-            int rotate=rotationDecoderUpdateMeans(&(previousInfo->rotDec),(previousInfo->means),&dotInfo);
-            probabilityGridsTurn(&probGrids,rotate);
-            int tmp;
-            switch(rotate%4){
-            case 3:
-                tmp=nCol;
-                nCol=nRow;
-                nRow=probGrids.prob1.numRows-8-tmp;
-                break;
-            case 2:
-                nCol=probGrids.prob1.numCols-nCol-8;
-                nRow=probGrids.prob1.numRows-nRow-8;
-                break;
-            case 1:
-                tmp=nCol;
-                nCol=probGrids.prob1.numCols-nRow-8;
-                nRow=tmp;
-                break;
-            }
-            IntPoint pos=decodePos(probGrids,nRow,nCol);
-            previousInfo->position.x=pos.x-nRow;
-            previousInfo->position.y=pos.y-nCol;
+
+            IntPoint pictureCenter={(rows*subdivision/2),(cols*subdivision/2)};
+            IntPoint decodedPos=probGridsDecode(&probGrids,pictureCenter,&previousInfo->rotDec, previousInfo->means,&dotInfo,100);
+            //cout<<"x:"<<decodedPos.x<<" y:"<< decodedPos.y<<endl;
+            if(decodedPos.x>=0)
+                previousInfo->position.x=decodedPos.x;//100;
+            if(decodedPos.y>=0)
+                previousInfo->position.y=decodedPos.y;//100;
             previousInfo->decoded=1;
+
 
         }
         dotInfoFree(&dotInfo);
