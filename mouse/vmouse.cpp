@@ -117,7 +117,7 @@ bool setMouseAngleRel(int fd, float angle){
         angle-=M_PI;
     if(angle*angle<(M_PI*0.0001*M_PI ))
         return false;
-    int intAngle=(angle*70.0)+0.5;
+    int intAngle=(angle*100.0)+0.5;
 
     memset(&ev, 0, sizeof(struct input_event));
     ev.type = EV_REL;
@@ -166,7 +166,7 @@ int main(void){
     int i;
     int dx,dy;
     Mat frame;
-    VideoCapture cap=initCam(0);
+    VideoCapture cap=initCam(1);
     getChannel(cap,frame,1);
     PositionInfo *posInfo=localize(NULL,frame.ptr(),frame.rows,frame.cols);
     int                    fd;
@@ -185,12 +185,14 @@ int main(void){
         }
         float newAngle=getAngle(posInfo);
         float diff=newAngle-oldAngle;
-        if(oldAngle!=0)
+        if(oldAngle!=0){
             if(setMouseAngleRel(fd,diff))
                 oldAngle =newAngle;
+        }
         else
+        {
             oldAngle=newAngle;
-
+        }
 
 
         for(int j=0;j<1;j++)

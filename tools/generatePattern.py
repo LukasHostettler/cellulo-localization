@@ -347,6 +347,7 @@ if __name__=='__main__':
 	parser.add_argument("-g","--gridspacing",default=0.6,type=float,help='The spacing between the dots in mm')
 	parser.add_argument("-x","--x-left",default=0,type=int,help='x coordinate of the left side')
 	parser.add_argument("-y","--y-top",default=0,type=int,help='y coordinate of the top')
+	parser.add_argument("-c","--calib",action='store_true',help='generates a calibration image')
 	#group = parser.add_mutually_exclusive_group() 
 	#group = parser.add_mutually_exclusive_group(); 
 	#group.add_argument("-f","--paper-format",default='A4', type=str,choices=['A0','A1','A2','A3','A4','A5'],help='format of the paper')
@@ -355,6 +356,8 @@ if __name__=='__main__':
 	#parser.add_argument("-s","--dot-size", default=1.0, type=float,help='ratio between radius of the dot and the gridspacing')
 	parser.add_argument("-d","--debug", action='store_true',help='prints the infomation needed for generation on pattern')
 	args=parser.parse_args();
+	if args.calib :
+		args.dot_offset=0;
 	testPS(width=args.gridspacing,offset=args.dot_offset,y0=args.y_top,x0=args.x_left,debug=args.debug)
 #    comp()
 #    testMod()
