@@ -13,8 +13,14 @@
 #include <cellulo_localization.h>
 #include "../test/camera.h"
 
-#define HOR_MAX 30000
-#define VER_MAX 43500
+
+#define HOR_MAX 44000
+#define VER_MAX 31000
+#define HOR_MIN 0
+#define VER_MIN 0
+#define HOR_BORDER 12000
+#define VER_BORDER 12000
+
 #define die(str, args...) do { \
     perror(str); \
     exit(EXIT_FAILURE); \
@@ -43,7 +49,6 @@ bool getChannel(VideoCapture &cap,Mat &frame,int channelNo){
         }
     }
 
-
     return false;
 }
 
@@ -60,12 +65,14 @@ int createMouse(){
     if(ioctl(fd, UI_SET_KEYBIT, BTN_LEFT) < 0)
         die("error: ioctl");
 
-    //    if(ioctl(fd, UI_SET_EVBIT, EV_REL) < 0)
-    //        die("error: ioctl");
+    if(ioctl(fd, UI_SET_EVBIT, EV_REL) < 0)
+        die("error: ioctl");
     //    if(ioctl(fd, UI_SET_RELBIT, REL_X) < 0)
     //        die("error: ioctl");
     //    if(ioctl(fd, UI_SET_RELBIT, REL_Y) < 0)
     //        die("error: ioctl");
+    if(ioctl(fd,UI_SET_RELBIT,REL_WHEEL)<0)
+        die("error: ioctl");
     if(ioctl(fd,UI_SET_EVBIT, EV_ABS)<0)
         die("error: ioctl");
     if(ioctl(fd, UI_SET_ABSBIT,ABS_X)<0)
@@ -74,15 +81,15 @@ int createMouse(){
         die("error:ioctl");
 
     memset(&uidev, 0, sizeof(uidev));
-    snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "uinput-sample");
+    snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "cellulo_mouse");
     uidev.id.bustype = BUS_USB;
     uidev.id.vendor  = 0x1;
     uidev.id.product = 0x1;
     uidev.id.version = 1;
-    uidev.absmax[ABS_X]= HOR_MAX;
-    uidev.absmax[ABS_Y]= VER_MAX;
-    uidev.absmin[ABS_X]=0;
-    uidev.absmin[ABS_Y]=0;
+    uidev.absmax[ABS_X]= HOR_MAX-HOR_BORDER;
+    uidev.absmax[ABS_Y]= VER_MAX-VER_BORDER;
+    uidev.absmin[ABS_X]= HOR_MIN+HOR_BORDER;
+    uidev.absmin[ABS_Y]= VER_MIN+VER_BORDER;
 
     if(write(fd, &uidev, sizeof(uidev)) < 0)
         die("error: write");
@@ -100,6 +107,31 @@ void destroyMouse(int fd){
         die("error: ioctl");
 
     close(fd);
+
+}
+void setMouseAngleRel(int fd, float angle){
+    struct input_event     ev;
+    while(angle< -M_PI)
+        angle+=M_PI;
+    while(angle>M_PI)
+        angle-=M_PI;
+    if(angle*angle<(M_PI*0.0001*M_PI ))
+        return;
+    int intAngle=(angle*70.0)+0.5;
+
+    memset(&ev, 0, sizeof(struct input_event));
+    ev.type = EV_REL;
+    ev.code = REL_WHEEL;
+    ev.value = intAngle;
+    if(write(fd, &ev, sizeof(struct input_event)) < 0)
+        die("error: write");
+    memset(&ev, 0, sizeof(struct input_event));
+    ev.type = EV_SYN;
+    ev.code = 0;
+    ev.value = 0;
+    if(write(fd, &ev, sizeof(struct input_event)) < 0)
+        die("error: write");
+    return;
 }
 
 void setMouseTo(int fd,int x,int y){
@@ -125,11 +157,12 @@ void setMouseTo(int fd,int x,int y){
     if(write(fd, &ev, sizeof(struct input_event)) < 0)
         die("error: write");
 
-    usleep(15000);
+    //usleep(1500);
     return;
 }
 
 int main(void){
+    static float oldAngle;
     int i;
     int dx,dy;
     Mat frame;
@@ -139,16 +172,27 @@ int main(void){
     int                    fd;
     fd=createMouse();
     sleep(1);
-    for(i=1;i<1000;i++){
-        frame.release();
+    for(i=1;i<4000;i++){
         getChannel(cap,frame,1);
         posInfo=localize(posInfo,frame.ptr(),frame.cols,frame.rows);
-        if(getX(posInfo)>0)
+        if(getX(posInfo)>0 &&getY(posInfo)>0){
             dx=getX(posInfo);
-        if(getY(posInfo)>0)
             dy=getY(posInfo);
+        }
+        else {
+           oldAngle=0;
+           continue;
+        }
+        float newAngle=getAngle(posInfo);
+        float diff=newAngle-oldAngle;
+        if(oldAngle!=0)
+            setMouseAngleRel(fd,diff);
+        oldAngle =newAngle;
+
+
+
         for(int j=0;j<1;j++)
-            setMouseTo(fd,HOR_MAX-dy,dx);
+            setMouseTo(fd,HOR_MAX-dy,VER_MIN+dx);
     }
     destroyMouse(fd);
     return 0;
