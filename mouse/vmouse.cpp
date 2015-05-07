@@ -82,7 +82,7 @@ int createMouse(){
 
     memset(&uidev, 0, sizeof(uidev));
     snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "cellulo_mouse");
-    uidev.id.bustype = BUS_USB;
+    uidev.id.bustype = BUS_VIRTUAL;//BUS_USB;
     uidev.id.vendor  = 0x1;
     uidev.id.product = 0x1;
     uidev.id.version = 1;
@@ -109,14 +109,14 @@ void destroyMouse(int fd){
     close(fd);
 
 }
-void setMouseAngleRel(int fd, float angle){
+bool setMouseAngleRel(int fd, float angle){
     struct input_event     ev;
     while(angle< -M_PI)
         angle+=M_PI;
     while(angle>M_PI)
         angle-=M_PI;
     if(angle*angle<(M_PI*0.0001*M_PI ))
-        return;
+        return false;
     int intAngle=(angle*70.0)+0.5;
 
     memset(&ev, 0, sizeof(struct input_event));
@@ -131,7 +131,7 @@ void setMouseAngleRel(int fd, float angle){
     ev.value = 0;
     if(write(fd, &ev, sizeof(struct input_event)) < 0)
         die("error: write");
-    return;
+    return true;
 }
 
 void setMouseTo(int fd,int x,int y){
@@ -186,8 +186,10 @@ int main(void){
         float newAngle=getAngle(posInfo);
         float diff=newAngle-oldAngle;
         if(oldAngle!=0)
-            setMouseAngleRel(fd,diff);
-        oldAngle =newAngle;
+            if(setMouseAngleRel(fd,diff))
+                oldAngle =newAngle;
+        else
+            oldAngle=newAngle;
 
 
 
